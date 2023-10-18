@@ -1,7 +1,7 @@
 /**
  * This codes performs a simple extension on the Arellano (2008) model. 
  * We propose a model in which recovery rates on defaulted bonds can vary.
- * Author: Lucas Belmudes 10/17/2023.
+ * Author: Lucas Belmudes & Angelo Mendes 10/17/2023.
 */
 
 #include <iostream>
@@ -59,10 +59,6 @@ int main(){
     display_matrix(economy.Q, economy.Y_grid_size, economy.B_grid_size);
     std::cout << "Value function" << std::endl;
     display_matrix(economy.V, economy.Y_grid_size, economy.B_grid_size);
-
-
-
-
 
     // Free memory:
     delete[] y_grid;
