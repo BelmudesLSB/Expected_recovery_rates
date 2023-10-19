@@ -21,4 +21,6 @@ double utility(double c,  double gamma, double c_lb);
 // Copy vector:
 void copy_vector(double* prt_vector, double* prt_vector_copy, int size);
 
+// Copy vector:
+void copy_vector(int* prt_vector, double* prt_vector_copy, int size);
 #endif

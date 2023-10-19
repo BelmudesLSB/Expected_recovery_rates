@@ -1,6 +1,7 @@
 #include <iostream>
 #include "auxiliary.hpp"
 #include <cmath>
+#include <mex.h>
 
 // Normal cumulative distribution function:
 double normalCDF(double x){
@@ -52,3 +53,11 @@ void copy_vector(double* prt_vector, double* prt_vector_copy, int size){
         prt_vector_copy[i] = prt_vector[i];
     }
 }
+
+// Copy vector:
+void copy_vector(int* prt_vector, double* prt_vector_copy, int size){
+    for (int i=0; i<size; i++){
+        prt_vector_copy[i] = static_cast<double>(prt_vector[i]);
+    }
+}
+
