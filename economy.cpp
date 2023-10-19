@@ -71,9 +71,12 @@ int Economy::initialize_economy(){
 void Economy::guess_vd_vr_q(){
     for (int i=0; i<Y_grid_size; i++){
         for (int j=0; j<B_grid_size; j++){
-            V_d[i*B_grid_size+j] = utility( Y_grid_default[i] + Alpha * B_grid[j], Gamma, Tol) + (Beta/(1-Beta)) * utility(Y_grid_default[i], Gamma, Tol);
-            V_r[i*B_grid_size+j] = utility( R * B_grid[j] + Y_grid[i], Gamma, Tol) + (Beta/(1-Beta)) * utility(R * B_grid[j] + Y_grid[i], Gamma, Tol);
-            Q[i*B_grid_size+j] = 1/(1+R) * ((double)j/((double)B_grid_size-1));;
+            //V_d[i*B_grid_size+j] = utility( Y_grid_default[i] + Alpha * B_grid[j], Gamma, Tol) + (Beta/(1-Beta)) * utility(Y_grid_default[i], Gamma, Tol);
+            V_d[i*B_grid_size+j] = 0 ;
+            //V_r[i*B_grid_size+j] = utility( R * B_grid[j] + Y_grid[i], Gamma, Tol) + (Beta/(1-Beta)) * utility(R * B_grid[j] + Y_grid[i], Gamma, Tol);
+            V_r[i*B_grid_size+j] = 0;
+            //Q[i*B_grid_size+j] = 1/(1+R) * ((double)j/((double)B_grid_size-1));
+            Q[i*B_grid_size+j] = 1/(1+R);
         }
     }
 }
@@ -218,7 +221,8 @@ int Economy::solve_model(){
             return EXIT_SUCCESS;
 
         } else {
-            if (iter % 25 == 0){
+            //if (iter % 25 == 0){
+            if (false){
                 std::cout << "Iteration: " << iter << std::endl;
                 std::cout << "Difference between value function at default: " << diff_vd << std::endl;
                 std::cout << "Difference between value function at reentry: " << diff_vr << std::endl;

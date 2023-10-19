@@ -12,10 +12,10 @@
 int main(){
 
     // Set parameters:
-    const int b_grid_size = 251;        // Number of points in the grid for the bond price.
-    const double b_grid_min = -0.5;     // Minimum value of the bond price.
+    const int b_grid_size = 100;        // Number of points in the grid for the bond price.
+    const double b_grid_min = -1.00;    // Minimum value of the bond price.
     const double b_grid_max = 0.00;     // Maximum value of the bond price.
-    const int y_grid_size = 20;         // Number of points in the grid for the income.
+    const int y_grid_size = 10;         // Number of points in the grid for the income.
     const double y_default = 0.969;     // Maximum income under default.
     const double beta = 0.953;          // Discount factor.
     const double gamma = 2;             // Risk aversion.
@@ -24,8 +24,8 @@ int main(){
     const double sigma = 0.025;         // Standard deviation of the income.
     const double theta = 0.282;         // Probability of a re-entry.
     const double alpha = 0.00;          // Recovery on defaulted debt.
-    const int max_iter = 1000;          // Maximum number of iterations.
-    const double tol = 1e-6;            // Tolerance for the convergence.
+    const int max_iter = 2000;          // Maximum number of iterations.
+    const double tol = 1e-7;            // Tolerance for the convergence.
     const double m = 3;                 // Number of standard deviations for the income grid.
 
     // Set pointers to store the results of the model:
@@ -39,7 +39,6 @@ int main(){
     double* q = new double[y_grid_size*b_grid_size];
     int* b_policy = new int[y_grid_size*b_grid_size];
     double* d_policy = new double[y_grid_size*b_grid_size];
-
   
     // Create an instance of the Economy class:
     Economy economy(b_grid_size, b_grid_min, b_grid_max, y_grid_size, y_default, beta, gamma, r, rho, sigma, theta, alpha, tol, max_iter, m, y_grid, y_grid_default, b_grid, p, v, v_r, v_d, q, b_policy, d_policy);
@@ -52,7 +51,8 @@ int main(){
     display_matrix(economy.Q, economy.Y_grid_size, economy.B_grid_size);
     std::cout << "Value function" << std::endl;
     display_matrix(economy.V, economy.Y_grid_size, economy.B_grid_size);
-
+    std::cout << "Policy" << std::endl;
+    display_matrix_int(economy.B_policy, economy.Y_grid_size, economy.B_grid_size);
     // Free memory:
     delete[] y_grid;
     delete[] y_grid_default;
@@ -66,5 +66,4 @@ int main(){
     delete[] d_policy;
 
     return 0;
-
 }
