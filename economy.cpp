@@ -2,6 +2,7 @@
 #include "Initialization.hpp"
 #include "auxiliary.hpp"
 #include <iostream>
+#include <cmath>
 
 Economy::Economy(int b_grid_size,  double b_grid_min,  double b_grid_max,  int y_grid_size,  double y_default,  double beta,  double gamma,  double r,  double rho,  double sigma,  double theta,  double alpha,  double tol,  int max_iter,  double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q, int* ptr_b_policy, double* ptr_d_policy){
   
@@ -81,18 +82,20 @@ void Economy::guess_vd_vr_q(){
 void Economy::update_v_and_default_policy(){
     for (int i=0; i<Y_grid_size; i++){
         for (int j=0; j<B_grid_size; j++){
-            if (V_r[i*B_grid_size+j] >= V_d[i*B_grid_size+j]){
-                V[i*B_grid_size+j] = V_r[i*B_grid_size+j];
+            double V_r_aux = V_r[i*B_grid_size+j];
+            double V_d_aux = V_d[i*B_grid_size+j];
+            if (V_r_aux >= V_d_aux){
+                V[i*B_grid_size+j] = V_r_aux;
                 D_policy[i*B_grid_size+j] = 0;
             } else {
-                V[i*B_grid_size+j] = V_d[i*B_grid_size+j];
+                V[i*B_grid_size+j] = V_d_aux;
                 D_policy[i*B_grid_size+j] = 1;
             }
         }
     }
 }
 
-// Update price:
+// Update price given a default policy:
 void Economy::update_price(){
     for (int i=0; i<Y_grid_size; i++){
         for (int j=0; j<B_grid_size; j++){
@@ -100,6 +103,7 @@ void Economy::update_price(){
             for (int i_prime = 0; i_prime < Y_grid_size; i_prime++){
                 aux += P[i*Y_grid_size+i_prime] * (1-D_policy[i_prime*B_grid_size+j]) * (1/(1+R));          
             }
+        Q[i*B_grid_size+j] = aux; 
         }
     }
 }
@@ -116,7 +120,7 @@ void Economy::update_vd(){
                 E_V += P[i*Y_grid_size+i_prime] * V[i_prime*B_grid_size+(B_grid_size-1)];    // Expected value given reentry and zero debt.
                 E_Vd += P[i*Y_grid_size+i_prime] * Vd0[i_prime*B_grid_size+(B_grid_size-1)]; // Expected value given exclusion and zero debt.        
             }
-            V_d[i*B_grid_size+j] = utility(Y_grid_default[i] + Alpha * B_grid[j], Gamma, Tol) + Beta * (Theta * E_V + (1-Theta) * E_Vd);
+            V_d[i*B_grid_size+j] = utility(Y_grid_default[i] + Alpha * B_grid[j], Gamma, Tol) + Beta * (Theta * E_V + (1-Theta) * E_Vd); // Payoff of recovery in current period.
         }
     }
     delete[] Vd0;
@@ -126,21 +130,22 @@ void Economy::update_vd(){
 void Economy::update_vr_and_bond_policy(){
     for (int i=0; i<Y_grid_size; i++){
         for (int j=0; j<B_grid_size; j++){
-            double aux_v = -1000000000;
-            double E_Vx = 0;    // Expected continuation value of repayment.
-                for (int x = 0; x<B_grid_size; x++){
+            double aux_v = -1000000000; 
+            // Loop over possible bond policies.                          
+            for (int x = 0; x<B_grid_size; x++){    
+                double E_V_rx = 0;                  // Expected continuation value of repayment following policy x.
+                double c = Y_grid[i] - Q[i*B_grid_size+x] * B_grid[x] + B_grid[j];
+                if (c >= Tol){
                     for (int i_prime = 0; i_prime < Y_grid_size; i_prime++){
-                        E_Vx += P[i*Y_grid_size+i_prime] * V[i_prime*B_grid_size+x];
+                        E_V_rx += P[i*Y_grid_size+i_prime] * V[i_prime*B_grid_size+x];
                     }
-                    double c = Y_grid[i] - Q[i*B_grid_size+x] * x + B_grid[j];
-                    if (c >= Tol){
-                        double temp = utility(c, Gamma, Tol) + Beta * E_Vx;
-                        if (temp >= aux_v){
-                            aux_v = temp;
-                            B_policy[i*B_grid_size+j] = x;
-                        }
+                    double temp = utility(c, Gamma, Tol) + Beta * E_V_rx;
+                    if (temp >= aux_v){
+                        aux_v = temp;
+                        B_policy[i*B_grid_size+j] = x;
                     }
                 }
+            }
             V_r[i*B_grid_size+j] = aux_v;
         }
     }
@@ -149,10 +154,16 @@ void Economy::update_vr_and_bond_policy(){
 // Solve the model:
 int Economy::solve_model(){
     
-    guess_vd_vr_q();    // Guess:
-    int iter = 0;       // Initialize iteration counter:
-    double diff = 1;    // Initialize difference between value functions:
+    // Initialize economy:
+    if (initialize_economy() == EXIT_SUCCESS){
+        std::cout << "Economy initialized successfully." << std::endl;
+    } else {
+        std::cout << "Economy initialization failed." << std::endl;
+        return EXIT_FAILURE;
+    }
 
+    // Guess value functions and prices and copy initial values:
+    guess_vd_vr_q();    
     double* Vd0 = new double[Y_grid_size * B_grid_size];      // Store initial value function at default:
     copy_vector(V_d, Vd0, Y_grid_size * B_grid_size);
     double* Vr0 = new double[Y_grid_size * B_grid_size];      // Store initial value function at reentry:
@@ -161,11 +172,13 @@ int Economy::solve_model(){
     copy_vector(Q, Q0, Y_grid_size * B_grid_size);
 
     // Initialize difference between value functions:
-    double diff_q = 1000;
-    double diff_vd = 1000;
-    double diff_vr = 1000;
+    int iter = 0;          
+    double diff_q = 1;
+    double diff_vd = 1;
+    double diff_vr = 1;
+    double aux_q, aux_vd, aux_vr;
 
-    while (diff > Tol && iter < Max_iter){
+    while (iter < Max_iter){
       
         update_v_and_default_policy();                  // Update v and default policy:
         update_price();                                 // update price:
@@ -175,12 +188,12 @@ int Economy::solve_model(){
         diff_q = 0;                                     // Difference between prices.
         diff_vd = 0;                                    // Difference between value function at default.
         diff_vr = 0;                                    // Difference between value function at reentry.
-        double aux_q, aux_vd, aux_vr;
+        
         for (int i=0; i<Y_grid_size; i++){
             for (int j=0; j<B_grid_size; j++){
-                aux_q = std::abs(Q[i*B_grid_size+j] - Q0[i*B_grid_size+j]);
-                aux_vd = std::abs(V_d[i*B_grid_size+j] - Vd0[i*B_grid_size+j]);
-                aux_vr = std::abs(V_r[i*B_grid_size+j] - Vr0[i*B_grid_size+j]);
+                aux_q = fabs(Q[i*B_grid_size+j] - Q0[i*B_grid_size+j]);
+                aux_vd = fabs(V_d[i*B_grid_size+j] - Vd0[i*B_grid_size+j]);
+                aux_vr = fabs(V_r[i*B_grid_size+j] - Vr0[i*B_grid_size+j]);
                 if (aux_q > diff_q){
                     diff_q = aux_q;
                 }
@@ -197,7 +210,11 @@ int Economy::solve_model(){
             std::cout << "Convergence achieved after " << iter << " iterations." << std::endl;
             std::cout << "Difference between value function at default: " << diff_vd << std::endl;
             std::cout << "Difference between value function at reentry: " << diff_vr << std::endl;
-            std::cout << "Difference between default probability: " << diff_q << std::endl;
+            std::cout << "Difference between prices: " << diff_q << std::endl;
+            // Free memory:
+            delete[] Vd0;
+            delete[] Vr0;
+            delete[] Q0;
             return EXIT_SUCCESS;
 
         } else {
@@ -205,7 +222,7 @@ int Economy::solve_model(){
                 std::cout << "Iteration: " << iter << std::endl;
                 std::cout << "Difference between value function at default: " << diff_vd << std::endl;
                 std::cout << "Difference between value function at reentry: " << diff_vr << std::endl;
-                std::cout << "Difference between default probability: " << diff_q << std::endl;
+                std::cout << "Difference between prices: " << diff_q << std::endl;
             }
             // Update value functions and prices:
             copy_vector(V_d, Vd0, Y_grid_size * B_grid_size);
@@ -214,9 +231,14 @@ int Economy::solve_model(){
             iter += 1;
         }
     }
+    // If the model does not converge:
     std::cout << "Convergence not achieved after " << iter << " iterations." << std::endl;
     std::cout << "Difference between value function at default: " << diff_vd << std::endl;
     std::cout << "Difference between value function at reentry: " << diff_vr << std::endl;
     std::cout << "Difference between default probability: " << diff_q << std::endl;
+    // Free memory:
+    delete[] Vd0;
+    delete[] Vr0;
+    delete[] Q0;
     return EXIT_FAILURE;
 }

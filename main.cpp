@@ -44,13 +44,6 @@ int main(){
     // Create an instance of the Economy class:
     Economy economy(b_grid_size, b_grid_min, b_grid_max, y_grid_size, y_default, beta, gamma, r, rho, sigma, theta, alpha, tol, max_iter, m, y_grid, y_grid_default, b_grid, p, v, v_r, v_d, q, b_policy, d_policy);
 
-    // Initialize economy:
-    if (economy.initialize_economy() == EXIT_SUCCESS){
-        std::cout << "Economy initialized successfully." << std::endl;
-    } else {
-        std::cout << "Economy initialization failed." << std::endl;
-    }
-
     // Solve the model:
     economy.solve_model();
 
