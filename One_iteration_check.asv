@@ -1,16 +1,16 @@
 %% This script performs a one iteration check on the solutions obtained from the .mex file.
 
-Q1 = zeros(size(Q));
-B1_policy = zeros(size(B_policy)); 
-D1_policy = zeros(size(D_policy));
-V1_r = zeros(size(V_r));
-V1_d = zeros(size(V_d));
-V1 = zeros(size(V));
+Q1 = zeros(size(Q_high));
+B1_policy = zeros(size(B_policy_high)); 
+D1_policy = zeros(size(D_policy_high));
+V1_r = zeros(size(V_r_high));
+V1_d = zeros(size(V_d_high));
+V1 = zeros(size(V_high));
 
 % Update the value function:
 for y = 1:params.y_grid_size
     for b = 1:params.b_grid_size
-        if V_r(y,b)>= V_d(y,b)
+        if V_r(y,b)>= V_d_high(y,b)
             V1(y,b)= V_r(y,b);
             D1_policy(y,b) = 0;
         else
@@ -24,7 +24,7 @@ end
 for y = 1:params.y_grid_size
     for b_prime = 1:params.b_grid_size
         for y_prime = 1:params.y_grid_size
-            Q1(y,b_prime) =  Q1(y,b_prime) + P(y, y_prime) * (1-D1_policy(y_prime, b_prime)) * (1/(1+params.r));
+            Q1(y,b_prime) =  Q1(y,b_prime) + P(y, y_prime) * ((1-D1_policy(y_prime, b_prime)) + D1_policy(y_prime, b_prime) * params.alpha) * (1/(1+params.r));
         end
     end
 end
