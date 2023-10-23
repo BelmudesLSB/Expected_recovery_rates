@@ -9,10 +9,10 @@ clear;
 mex main.cpp economy.cpp initialization.cpp auxiliary.cpp 
 
 %% Common parameters:
-params.b_grid_size = 100;                % Number of points in the grid for the bond price.
+params.b_grid_size = 50;                % Number of points in the grid for the bond price.
 params.b_grid_min = -0.6;               % Minimum value of the bond price.
 params.b_grid_max = 0.00;               % Maximum value of the bond price.
-params.y_grid_size = 10;                % Number of points in the grid for the income.
+params.y_grid_size = 5;                % Number of points in the grid for the income.
 params.y_default = 0.969;               % Maximum income under default.
 params.beta = 0.953;                    % Discount factor.
 params.gamma = 2;                       % Risk aversion.
@@ -23,8 +23,8 @@ params.theta = 0.282;                   % Probability of a re-entry.
 params.max_iter = 2000;                 % Maximum number of iterations.
 params.tol = 1e-7;                      % Tolerance for the convergence.
 params.m = 3;                           % Number of standard deviations for the income grid.
-params.alpha_low = 0.2;                % Low recovery on defaulted debt.
-params.alpha_high = 0.1;               % High recovery on defaulted debt.
+params.alpha_low = 0;                % Low recovery on defaulted debt.
+params.alpha_high = 0.3;               % High recovery on defaulted debt.
 
 %% Run code with both alphas;
 
