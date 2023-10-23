@@ -130,8 +130,8 @@ void Economy::update_price(){
                     aux_low += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j]) + D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j] * Alpha_low) *  (1/(1+R));
                     aux_high += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j]) + D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j] * Alpha_high) *  (1/(1+R));
                 }
-                Q_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_low;
-                Q_low[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_high;
+                Q_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_high;
+                Q_low[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_low;
             }
         }
     }
@@ -278,8 +278,7 @@ int Economy::solve_model(){
             return EXIT_SUCCESS;
 
         } else {
-            //if (iter % 25 == 0){
-            if (false){
+            if (iter % 25 == 0){
                 mexPrintf("Iteration: %d\n", iter);
                 mexPrintf("Difference between value function at default: %f\n", diff_vd);
                 mexPrintf("Difference between value function at reentry: %f\n", diff_vr);
