@@ -105,7 +105,7 @@ void Economy::update_price(){
         for (int j=0; j<B_grid_size; j++){
         double aux = 0;
             for (int i_prime = 0; i_prime < Y_grid_size; i_prime++){
-                aux += P[i*Y_grid_size+i_prime] * (1-D_policy[i_prime*B_grid_size+j]) * (1/(1+R));          
+                aux += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*B_grid_size+j])+D_policy[i_prime*B_grid_size+j]*Alpha)* (1/(1+R));          
             }
         Q[i*B_grid_size+j] = aux; 
         }
