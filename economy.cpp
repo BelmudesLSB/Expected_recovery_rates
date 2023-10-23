@@ -3,6 +3,7 @@
 #include "auxiliary.hpp"
 #include <iostream>
 #include <cmath>
+#include <mex.h>
 
 
 Economy::Economy(int b_grid_size, double b_grid_min, double b_grid_max, int y_grid_size, double y_default, double beta, double gamma, double r, double rho, double sigma, double theta, double alpha_low, double alpha_high, double tol, int max_iter, double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q_low, double* ptr_q_high, int* ptr_b_policy_low, int* ptr_b_policy_high, double* ptr_d_policy){
@@ -46,14 +47,14 @@ int Economy::initialize_economy(){
     // Create the grid for the income:
     create_bond_grids(B_grid, B_grid_size, B_grid_max, B_grid_min);
     if (B_grid[B_grid_size - 1] > Tol || B_grid[B_grid_size - 1] < -Tol){
-        std::cout << "Error: the bond grid is not correctly initialized." << std::endl;
+        mexPrintf("Error: the bond grid is not correctly initialized..\n");
         return EXIT_FAILURE;
     }
     // Create the grid for the income and probability matrix:
     create_income_and_prob_grids(Y_grid, P, Y_grid_size, Sigma, Rho, M);
     for (int i = 0; i < Y_grid_size; i++){
         if (Y_grid[i]<=0){
-            std::cout << "Error: the income grid is not correctly initialized." << std::endl;
+            mexPrintf("Error: the income grid is not correctly initialized.\n");
             return EXIT_FAILURE;
         }
     }
@@ -63,7 +64,7 @@ int Economy::initialize_economy(){
             prob += P[i*Y_grid_size+j];
         }
         if (prob > 1+Tol || prob < 1-Tol){
-            std::cout << "Error: the probability matrix is not correctly initialized." << std::endl;
+            mexPrintf("Error: the probability matrix is not correctly initialized\n");
             return EXIT_FAILURE;
         }
     }
@@ -127,7 +128,7 @@ void Economy::update_price(){
                 for (int i_prime = 0; i_prime < Y_grid_size; i_prime++)
                 {
                     aux_low += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j]) + D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j] * Alpha_low) *  (1/(1+R));
-                    aux_high += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j]) + D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j] * Alpha_low) *  (1/(1+R));
+                    aux_high += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j]) + D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j] * Alpha_high) *  (1/(1+R));
                 }
                 Q_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_low;
                 Q_low[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_high;
@@ -136,37 +137,25 @@ void Economy::update_price(){
     }
 }
 
- 
- 
- 
- 
- /*
-// Update price given a default policy:
-void Economy::update_price(){
-    for (int i=0; i<Y_grid_size; i++){
-        for (int j=0; j<B_grid_size; j++){
-        double aux = 0;
-            for (int i_prime = 0; i_prime < Y_grid_size; i_prime++){
-                aux += P[i*Y_grid_size+i_prime] * (1-D_policy[i_prime*B_grid_size+j]) * (1/(1+R));          
-            }
-        Q[i*B_grid_size+j] = aux; 
-        }
-    }
-}
-
 // Update value at default:
 void Economy::update_vd(){
-    double* Vd0 = new double[Y_grid_size * B_grid_size];
-    copy_vector(V_d, Vd0, Y_grid_size * B_grid_size);
-    for (int i=0; i<Y_grid_size; i++){
-        for (int j=0; j<B_grid_size; j++){
-            double E_V = 0;
-            double E_Vd = 0;
-            for (int i_prime = 0; i_prime < Y_grid_size; i_prime++){
-                E_V += P[i*Y_grid_size+i_prime] * V[i_prime*B_grid_size+(B_grid_size-1)];    // Expected value given reentry and zero debt.
-                E_Vd += P[i*Y_grid_size+i_prime] * Vd0[i_prime*B_grid_size+(B_grid_size-1)]; // Expected value given exclusion and zero debt.        
+    double* Vd0 = new double[Y_grid_size * B_grid_size* B_grid_size];      // Store initial value function at default:
+    copy_vector(V_d, Vd0, Y_grid_size * B_grid_size * B_grid_size);
+    for (int i=0; i<Y_grid_size; i++)
+    {
+        for (int j=0; j<B_grid_size; j++)
+        {
+            for (int z=0; z<B_grid_size; z++)
+            {
+                double E_V = 0;
+                double E_Vd = 0;
+                for (int i_prime = 0; i_prime < Y_grid_size; i_prime++)
+                {
+                    E_V += P[i*Y_grid_size+i_prime] * V[i_prime*B_grid_size*B_grid_size+(B_grid_size-1)*B_grid_size+(B_grid_size-1)];           // Expected value given exclusion and zero debt.
+                    E_Vd += P[i*Y_grid_size+i_prime] * V_d[i_prime*(B_grid_size*B_grid_size)+(B_grid_size-1)*B_grid_size+(B_grid_size-1)];         // Expected value given exclusion and zero debt.      
+                }
+            V_d[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = utility(Y_grid_default[i] + Alpha_low * B_grid[z] + Alpha_high * B_grid[j], Gamma, Tol) + Beta * (Theta * E_V + (1-Theta) * E_Vd); // Payoff of recovery in current period.
             }
-            V_d[i*B_grid_size+j] = utility(Y_grid_default[i] + Alpha * B_grid[j], Gamma, Tol) + Beta * (Theta * E_V + (1-Theta) * E_Vd); // Payoff of recovery in current period.
         }
     }
     delete[] Vd0;
@@ -174,25 +163,34 @@ void Economy::update_vd(){
 
 // Update value of repayment and bond policy:
 void Economy::update_vr_and_bond_policy(){
-    for (int i=0; i<Y_grid_size; i++){
-        for (int j=0; j<B_grid_size; j++){
-            double aux_v = -1000000000; 
-            // Loop over possible bond policies.                          
-            for (int x = 0; x<B_grid_size; x++){    
-                double E_V_rx = 0;                  // Expected continuation value of repayment following policy x.
-                double c = Y_grid[i] - Q[i*B_grid_size+x] * B_grid[x] + B_grid[j];
-                if (c >= Tol){
-                    for (int i_prime = 0; i_prime < Y_grid_size; i_prime++){
-                        E_V_rx += P[i*Y_grid_size+i_prime] * V[i_prime*B_grid_size+x];
-                    }
-                    double temp = utility(c, Gamma, Tol) + Beta * E_V_rx;
-                    if (temp >= aux_v){
-                        aux_v = temp;
-                        B_policy[i*B_grid_size+j] = x;
-                    }
+    for (int i=0; i<Y_grid_size; i++)
+    {
+        for (int j=0; j<B_grid_size; j++)
+        {
+            for (int z=0; z<B_grid_size; z++)
+            {
+                double aux_v = -1000000000;                          
+                for (int x_low = 0; x_low<B_grid_size; x_low++)
+                {
+                    for (int x_high = 0; x_high<B_grid_size; x_high++)
+                    {  
+                        double E_V_rx = 0;                                      // Expected continuation value of repayment following policy x_low and x_high.
+                        double c = Y_grid[i] - Q_low[i*(B_grid_size*B_grid_size)+x_high*B_grid_size+x_low] * B_grid[x_low] - Q_high[i*(B_grid_size*B_grid_size)+x_high*B_grid_size+x_low] * B_grid[x_high] + B_grid[j] + B_grid[z];
+                        if (c >= Tol){
+                            for (int i_prime = 0; i_prime < Y_grid_size; i_prime++){
+                                E_V_rx += P[i*Y_grid_size+i_prime] * V[i_prime*(B_grid_size*B_grid_size)+x_high*B_grid_size+x_low];
+                            }
+                            double temp = utility(c, Gamma, Tol) + Beta * E_V_rx;
+                            if (temp >= aux_v){
+                                aux_v = temp;
+                                B_policy_low[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = x_low;
+                                B_policy_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = x_high;
+                            }
+                        }
+                }
+                V_r[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_v;
                 }
             }
-            V_r[i*B_grid_size+j] = aux_v;
         }
     }
 }
@@ -202,27 +200,30 @@ int Economy::solve_model(){
     
     // Initialize economy:
     if (initialize_economy() == EXIT_SUCCESS){
-        std::cout << "Economy initialized successfully." << std::endl;
+        mexPrintf("Economy initialized successfully.\n");
     } else {
-        std::cout << "Economy initialization failed." << std::endl;
+        mexPrintf("Economy initialization failed.\n");
         return EXIT_FAILURE;
     }
 
     // Guess value functions and prices and copy initial values:
     guess_vd_vr_q();    
-    double* Vd0 = new double[Y_grid_size * B_grid_size];      // Store initial value function at default:
-    copy_vector(V_d, Vd0, Y_grid_size * B_grid_size);
-    double* Vr0 = new double[Y_grid_size * B_grid_size];      // Store initial value function at reentry:
-    copy_vector(V_r, Vr0, Y_grid_size * B_grid_size);
-    double* Q0 = new double[Y_grid_size * B_grid_size];       // Store initial default probability:
-    copy_vector(Q, Q0, Y_grid_size * B_grid_size);
+    double* Vd0 = new double[Y_grid_size *  B_grid_size * B_grid_size];     // Store initial value function at default:
+    copy_vector(V_d, Vd0, Y_grid_size * B_grid_size * B_grid_size);
+    double* Vr0 = new double[Y_grid_size *  B_grid_size * B_grid_size];     // Store initial value function at reentry:
+    copy_vector(V_r, Vr0, Y_grid_size * B_grid_size * B_grid_size);
+    double* Q0_low = new double[Y_grid_size *  B_grid_size * B_grid_size];      // Store initial default probability:
+    copy_vector(Q_low, Q0_low, Y_grid_size * B_grid_size * B_grid_size);
+    double* Q0_high = new double[Y_grid_size *  B_grid_size * B_grid_size];      // Store initial default probability:
+    copy_vector(Q_high, Q0_high, Y_grid_size * B_grid_size * B_grid_size);
 
     // Initialize difference between value functions:
     int iter = 0;          
-    double diff_q = 1;
+    double diff_q_low = 1;
+    double diff_q_high = 1;
     double diff_vd = 1;
     double diff_vr = 1;
-    double aux_q, aux_vd, aux_vr;
+    double aux_q_low, aux_q_high, aux_vd, aux_vr;
 
     while (iter < Max_iter){
       
@@ -231,62 +232,78 @@ int Economy::solve_model(){
         update_vd();                                    // update value at default:
         update_vr_and_bond_policy();                    // update value of repayment and bond policy:
         
-        diff_q = 0;                                     // Difference between prices.
+        diff_q_low = 0;                                 // Difference between prices.
+        diff_q_high = 0;                                // Difference between prices.
         diff_vd = 0;                                    // Difference between value function at default.
         diff_vr = 0;                                    // Difference between value function at reentry.
         
-        for (int i=0; i<Y_grid_size; i++){
-            for (int j=0; j<B_grid_size; j++){
-                aux_q = fabs(Q[i*B_grid_size+j] - Q0[i*B_grid_size+j]);
-                aux_vd = fabs(V_d[i*B_grid_size+j] - Vd0[i*B_grid_size+j]);
-                aux_vr = fabs(V_r[i*B_grid_size+j] - Vr0[i*B_grid_size+j]);
-                if (aux_q > diff_q){
-                    diff_q = aux_q;
-                }
-                if (aux_vd > diff_vd){
-                    diff_vd = aux_vd;
-                }
-                if (aux_vr > diff_vr){
-                    diff_vr = aux_vr;
+        for (int i=0; i<Y_grid_size; i++)
+        {
+            for (int j=0; j<B_grid_size; j++)
+            {
+                for (int z=0; z<B_grid_size; z++)
+                {
+                    aux_q_low = fabs(Q0_low[i*B_grid_size*B_grid_size+j*B_grid_size+z] - Q_low[i*B_grid_size*B_grid_size+j*B_grid_size+z]);
+                    aux_q_high = fabs(Q0_high[i*B_grid_size*B_grid_size+j*B_grid_size+z] - Q_high[i*B_grid_size*B_grid_size+j*B_grid_size+z]);
+                    aux_vd = fabs(V_d[i*B_grid_size*B_grid_size+j*B_grid_size+z] - Vd0[i*B_grid_size*B_grid_size+j*B_grid_size+z]);
+                    aux_vr = fabs(V_r[i*B_grid_size*B_grid_size+j*B_grid_size+z] - Vr0[i*B_grid_size*B_grid_size+j*B_grid_size+z]);
+                    if (aux_q_low > diff_q_low){
+                        diff_q_low = aux_q_low;
+                    }
+                    if (aux_q_high > diff_q_high){
+                        diff_q_high = aux_q_high;
+                    }
+                    if (aux_vd > diff_vd){
+                        diff_vd = aux_vd;
+                    }
+                    if (aux_vr > diff_vr){
+                        diff_vr = aux_vr;
+                    }
                 }
             }
         }
 
-        if (diff_q < Tol && diff_vd < Tol && diff_vr < Tol){
-            std::cout << "Convergence achieved after " << iter << " iterations." << std::endl;
-            std::cout << "Difference between value function at default: " << diff_vd << std::endl;
-            std::cout << "Difference between value function at reentry: " << diff_vr << std::endl;
-            std::cout << "Difference between prices: " << diff_q << std::endl;
+        if (diff_q_low < Tol && diff_q_high < Tol && diff_vd < Tol && diff_vr < Tol){
+            mexPrintf("Iteration: %d\n", iter);
+            mexPrintf("Difference between value function at default: %f\n", diff_vd);
+            mexPrintf("Difference between value function at reentry: %f\n", diff_vr);
+            mexPrintf("Difference between low prices: %f\n", diff_q_low);
+            mexPrintf("Difference between high prices: %f\n", diff_q_high);
+            mexPrintf("Convergence achieved after: %d\n", iter);
             // Free memory:
             delete[] Vd0;
             delete[] Vr0;
-            delete[] Q0;
+            delete[] Q0_low;
+            delete[] Q0_high;
             return EXIT_SUCCESS;
 
         } else {
             //if (iter % 25 == 0){
             if (false){
-                std::cout << "Iteration: " << iter << std::endl;
-                std::cout << "Difference between value function at default: " << diff_vd << std::endl;
-                std::cout << "Difference between value function at reentry: " << diff_vr << std::endl;
-                std::cout << "Difference between prices: " << diff_q << std::endl;
+                mexPrintf("Iteration: %d\n", iter);
+                mexPrintf("Difference between value function at default: %f\n", diff_vd);
+                mexPrintf("Difference between value function at reentry: %f\n", diff_vr);
+                mexPrintf("Difference between low prices: %f\n", diff_q_low);
+                mexPrintf("Difference between high prices: %f\n", diff_q_high);
             }
             // Update value functions and prices:
-            copy_vector(V_d, Vd0, Y_grid_size * B_grid_size);
-            copy_vector(V_r, Vr0, Y_grid_size * B_grid_size);
-            copy_vector(Q, Q0, Y_grid_size * B_grid_size);
+            copy_vector(V_d, Vd0, Y_grid_size * B_grid_size * B_grid_size);
+            copy_vector(V_r, Vr0, Y_grid_size * B_grid_size * B_grid_size);
+            copy_vector(Q_low, Q0_low, Y_grid_size * B_grid_size * B_grid_size);
+            copy_vector(Q_high, Q0_high, Y_grid_size * B_grid_size * B_grid_size);
             iter += 1;
         }
     }
     // If the model does not converge:
-    std::cout << "Convergence not achieved after " << iter << " iterations." << std::endl;
-    std::cout << "Difference between value function at default: " << diff_vd << std::endl;
-    std::cout << "Difference between value function at reentry: " << diff_vr << std::endl;
-    std::cout << "Difference between default probability: " << diff_q << std::endl;
+    mexPrintf("Convergence not achieved after: %d\n", iter);
+    mexPrintf("Difference between value function at default: %f\n", diff_vd);
+    mexPrintf("Difference between value function at reentry: %f\n", diff_vr);
+    mexPrintf("Difference between low prices: %f\n", diff_q_low);
+    mexPrintf("Difference between high prices: %f\n", diff_q_high);
     // Free memory:
     delete[] Vd0;
     delete[] Vr0;
-    delete[] Q0;
+    delete[] Q0_low;
+    delete[] Q0_high;
     return EXIT_FAILURE;
 }
-*/

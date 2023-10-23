@@ -71,14 +71,17 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
   
     // Create an instance of the Economy class:
     Economy economy(b_grid_size, b_grid_min, b_grid_max, y_grid_size, y_default, beta, gamma, r, rho, sigma, theta, alpha_low, alpha_high, tol, max_iter, m, y_grid, y_grid_default, b_grid, p, v, v_r, v_d, q_low, q_high, b_policy_low, b_policy_high, d_policy);
-    // Set all endogenous vairables to 3:
-    economy.initialize_economy();
     
-    //mexPrintf("Initialization done.\n");
+    mexPrintf("Initialization done.\n");
     // Solve the model:
-    //economy.solve_model();
+    //economy.initialize_economy();
+    //economy.guess_vd_vr_q();
+    //economy.update_v_and_default_policy();
+    //economy.update_price(); 
+    //economy.update_vd();
+    //economy.update_vr_and_bond_policy(); 
 
-    //mexPrintf("Solution found .\n");
+    economy.solve_model();
     
     mexPrintf("Copying results to MATLAB.\n");
     copy_vector(q_low, mxGetPr(Q_m_low), y_grid_size*b_grid_size*b_grid_size);
