@@ -5,7 +5,7 @@
 #include <cmath>
 
 
-Economy::Economy(int b_grid_size,  double b_grid_min,  double b_grid_max,  int y_grid_size,  double y_default,  double beta,  double gamma,  double r,  double rho,  double sigma,  double theta,  double alpha,  double tol,  int max_iter,  double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q, int* ptr_b_policy, double* ptr_d_policy){
+Economy::Economy(int b_grid_size, double b_grid_min, double b_grid_max, int y_grid_size, double y_default, double beta, double gamma, double r, double rho, double sigma, double theta, double alpha_low, double alpha_high, double tol, int max_iter, double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q_low, double* ptr_q_high, int* ptr_b_policy_low, int* ptr_b_policy_high, double* ptr_d_policy){
   
     // Parameters:
     B_grid_size = b_grid_size;            // Number of points in the grid for the bond price.   
@@ -19,7 +19,8 @@ Economy::Economy(int b_grid_size,  double b_grid_min,  double b_grid_max,  int y
     Rho = rho;                            // Persistence of the income.
     Sigma = sigma;                        // Standard deviation of the income.
     Theta = theta;                        // Probability of a re-entry.
-    Alpha = alpha;                        // Recovery on defaulted debt.
+    Alpha_low = alpha_low;                // Recovery rate for the low recovery debt.
+    Alpha_high = alpha_high;              // Recovery rate for the high recovery debt.
     Tol = tol;                            // Tolerance for the convergence.
     Max_iter = max_iter;                  // Maximum number of iterations.
     M = m;                                // Number of standard deviations for the income grid.
@@ -32,9 +33,12 @@ Economy::Economy(int b_grid_size,  double b_grid_min,  double b_grid_max,  int y
     V = ptr_v;                            // Value function.
     V_r = ptr_v_r;                        // Value function under re-entry.
     V_d = ptr_v_d;                        // Value function under default.
-    Q = ptr_q;                            // Default probability.
-    B_policy = ptr_b_policy;              // Bond price policy.
+    Q_low = ptr_q_low;                    // Price for the low recovery debt.
+    Q_high = ptr_q_high;                  // Price for the high recovery debt.
+    B_policy_low = ptr_b_policy_low;      // Bond policy for the low recovery debt.
+    B_policy_high = ptr_b_policy_high;    // Bond policy for the high recovery debt.
     D_policy = ptr_d_policy;              // Default policy.
+    
 }
 
 // Create grids and store it in the space previously allocated:
@@ -68,37 +72,75 @@ int Economy::initialize_economy(){
     return EXIT_SUCCESS;
 }
 
+
 // Guess value function at default, value at reentry and price:
 void Economy::guess_vd_vr_q(){
-    for (int i=0; i<Y_grid_size; i++){
-        for (int j=0; j<B_grid_size; j++){
-            //V_d[i*B_grid_size+j] = utility( Y_grid_default[i] + Alpha * B_grid[j], Gamma, Tol) + (Beta/(1-Beta)) * utility(Y_grid_default[i], Gamma, Tol);
-            V_d[i*B_grid_size+j] = 0 ;
-            //V_r[i*B_grid_size+j] = utility( R * B_grid[j] + Y_grid[i], Gamma, Tol) + (Beta/(1-Beta)) * utility(R * B_grid[j] + Y_grid[i], Gamma, Tol);
-            V_r[i*B_grid_size+j] = 0;
-            //Q[i*B_grid_size+j] = 1/(1+R) * ((double)j/((double)B_grid_size-1));
-            Q[i*B_grid_size+j] = 1/(1+R);
-        }
-    }
-}
-
-// Update value function and default policy:
-void Economy::update_v_and_default_policy(){
-    for (int i=0; i<Y_grid_size; i++){
-        for (int j=0; j<B_grid_size; j++){
-            double V_r_aux = V_r[i*B_grid_size+j];
-            double V_d_aux = V_d[i*B_grid_size+j];
-            if (V_r_aux >= V_d_aux){
-                V[i*B_grid_size+j] = V_r_aux;
-                D_policy[i*B_grid_size+j] = 0;
-            } else {
-                V[i*B_grid_size+j] = V_d_aux;
-                D_policy[i*B_grid_size+j] = 1;
+    for (int i=0; i<Y_grid_size; i++)
+    {
+        for (int j=0; j<B_grid_size; j++)
+        {
+            for (int z=0; z<B_grid_size; z++)
+            {
+                V_d[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = -20;
+                V_r[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = -20;
+                Q_low[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = 1/(1+R);
+                Q_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = 1/(1+R);
             }
         }
     }
 }
 
+
+// Update value function and default policy:
+void Economy::update_v_and_default_policy(){
+    for (int i=0; i<Y_grid_size; i++)
+    {
+        for (int j=0; j<B_grid_size; j++)
+        {
+            for (int z=0; z<B_grid_size; z++)
+            {
+                double V_r_aux = V_r[i*(B_grid_size*B_grid_size)+j*B_grid_size+z];
+                double V_d_aux = V_d[i*(B_grid_size*B_grid_size)+j*B_grid_size+z];
+                if (V_r_aux>=V_d_aux)
+                {
+                    V[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = V_r_aux;
+                    D_policy[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = 0;
+                } else {
+                    V[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = V_d_aux;
+                    D_policy[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = 1;
+                }    
+            }
+        }
+    }
+}
+ 
+// Update prices given a default policies;
+void Economy::update_price(){
+    for (int i=0; i<Y_grid_size; i++)
+    {
+        for (int j=0; j<B_grid_size; j++)
+        {
+            for (int z=0; z<B_grid_size; z++)
+            {
+                double aux_low = 0;
+                double aux_high = 0;
+                for (int i_prime = 0; i_prime < Y_grid_size; i_prime++)
+                {
+                    aux_low += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j]) + D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j] * Alpha_low) *  (1/(1+R));
+                    aux_high += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j]) + D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j] * Alpha_low) *  (1/(1+R));
+                }
+                Q_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_low;
+                Q_low[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_high;
+            }
+        }
+    }
+}
+
+ 
+ 
+ 
+ 
+ /*
 // Update price given a default policy:
 void Economy::update_price(){
     for (int i=0; i<Y_grid_size; i++){
@@ -247,3 +289,4 @@ int Economy::solve_model(){
     delete[] Q0;
     return EXIT_FAILURE;
 }
+*/

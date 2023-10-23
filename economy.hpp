@@ -19,7 +19,8 @@ class Economy{
         double Rho;            // Persistence of the income.
         double Sigma;          // Standard deviation of the income.
         double Theta;          // Probability of a re-entry.
-        double Alpha;          // Recovery on defaulted debt.
+        double Alpha_low;      // Recovery rate for low recovery bonds.
+        double Alpha_high;     // Recovery rate for high recovery bonds.
         double Tol;            // Tolerance for the convergence.
         int Max_iter;          // Maximum number of iterations.
         double M;              // Number of standard deviations for the income grid.
@@ -32,12 +33,14 @@ class Economy{
         double* V;
         double* V_r;
         double* V_d;
-        double* Q;
-        int* B_policy;
-        double* D_policy;
+        double* Q_low;
+        double* Q_high;
+        int* B_policy_low;
+        int* B_policy_high;
+        double* D_policy;  
 
         // Constructor:
-        Economy(int b_grid_size,  double b_grid_min,  double b_grid_max,  int y_grid_size,  double y_default,  double beta,  double gamma,  double r,  double rho,  double sigma,  double theta,  double alpha,  double tol,  int max_iter,  double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q, int* ptr_b_policy, double* ptr_d_policy);
+        Economy(int b_grid_size, double b_grid_min, double b_grid_max, int y_grid_size, double y_default, double beta, double gamma, double r, double rho, double sigma, double theta, double alpha_low, double alpha_high, double tol, int max_iter, double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q_low, double* ptr_q_high, int * ptr_b_policy_low, int * ptr_b_policy_high, double* ptr_d_policy);
 
         // Initialize economy:
         int initialize_economy();
