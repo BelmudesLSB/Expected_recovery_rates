@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 
+
 Economy::Economy(int b_grid_size,  double b_grid_min,  double b_grid_max,  int y_grid_size,  double y_default,  double beta,  double gamma,  double r,  double rho,  double sigma,  double theta,  double alpha,  double tol,  int max_iter,  double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q, int* ptr_b_policy, double* ptr_d_policy){
   
     // Parameters:
