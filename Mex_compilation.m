@@ -11,7 +11,7 @@ mex main.cpp economy.cpp initialization.cpp auxiliary.cpp
 %% Parameters:
 
 params.b_grid_size = 100;        % Number of points in the grid for the bond price.
-params.b_grid_min = -1.00;       % Minimum value of the bond price.
+params.b_grid_min = -1.00;       % Minimum value of the bond price.s
 params.b_grid_max = 0.00;        % Maximum value of the bond price.
 params.y_grid_size = 10;         % Number of points in the grid for the income.
 params.y_default = 0.969;        % Maximum income under default.
