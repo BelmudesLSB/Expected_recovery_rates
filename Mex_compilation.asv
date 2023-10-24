@@ -89,7 +89,7 @@ toc;
 save('Solution_alpha_benchmark', 'arellano_solution_alpha_benchmark')
 save('Solution_alpha_low', 'arellano_solution_alpha_low')
 save('Solution_alpha_high', 'arellano_solution_alpha_high')
-save('Parameters_benchmark.mat', 'params')
+save('Parameters_benchmark.mat', )
 save('Parameters_low', 'params_low')
 save('Parameters_high', 'params_high')
 
