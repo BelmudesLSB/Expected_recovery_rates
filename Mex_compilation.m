@@ -34,6 +34,10 @@ save('Solution', 'calibrated_model_solution')
 save('Parameters', 'params')
 toc;
 
+%% Value function for check:
+excel_filename = 'V.xlsx';
+xlswrite(excel_filename, calibrated_model_solution.V);
+
 %% Format variables:
 
 % Exogenous:
@@ -59,6 +63,7 @@ B_policy_low(D_policy == 1) = NaN;
 B_policy_high(D_policy == 1) = NaN;
 B_policy_high = B_policy_high + 1;
 B_policy_low = B_policy_low + 1;
+
 %% Problems with the code: you tend to borrow as much as you can, close to default.
 
 plot(B_grid, B_policy_high(50,:,4))
