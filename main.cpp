@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <mex.h>
+#include <omp.h>
 #include "economy.hpp"
 #include "initialization.hpp"
 #include "auxiliary.hpp"

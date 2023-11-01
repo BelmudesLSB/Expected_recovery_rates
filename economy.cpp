@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <mex.h>
+#include <omp.h>
 
 //! Note: For computations we first iterate over the low recovery bond and then iterate over the high recovery bond.
 //! Vectors are then V=[(b_low1;b_high1;y_1), (b_low2;b_high1;y_1),...,(b_lown;b_high1;y_1),(b_low1;b_high2;y_1),...
@@ -165,11 +166,12 @@ void Economy::update_vd(){
 
 // Update value of repayment and bond policy:
 void Economy::update_vr_and_bond_policy(){
+    #pragma omp parallel for collapse(3) schedule(dynamic) 
     for (int i=0; i<Y_grid_size; i++)
     {
         for (int j=0; j<B_grid_size; j++)
         {
-            for (int z=0; z<B_grid_size; z++) // Condition on (y,b_low,b_high).
+            for (int z=0; z<B_grid_size; z++) // Each thread takes care of one element of the grid.
             {
                 double aux_v = -1000000000;                          
                 for (int x_low = 0; x_low<B_grid_size; x_low++)

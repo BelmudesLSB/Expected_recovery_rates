@@ -6,13 +6,13 @@ clear;
 
 %% mex 
 
-mex main.cpp economy.cpp initialization.cpp auxiliary.cpp 
+mex CXXFLAGS="$CXXFLAGS -fopenmp -O3" LDFLAGS="$LDFLAGS -fopenmp" main.cpp economy.cpp initialization.cpp auxiliary.cpp 
 
 %% Common parameters:
-params.b_grid_size = 251;                % Number of points in the grid for the bond price.
+params.b_grid_size = 50;               % Number of points in the grid for the bond price.
 params.b_grid_min = -0.6;               % Minimum value of the bond price.
 params.b_grid_max = 0.00;               % Maximum value of the bond price.
-params.y_grid_size = 51;                 % Number of points in the grid for the income.
+params.y_grid_size = 6;                % Number of points in the grid for the income.
 params.y_default = 0.969;               % Maximum income under default.
 params.beta = 0.953;                    % Discount factor.
 params.gamma = 2;                       % Risk aversion.
@@ -55,7 +55,10 @@ V_d = permute(reshape(calibrated_model_solution.V_d, params.b_grid_size, params.
 B_policy_low = permute(reshape(calibrated_model_solution.B_policy_low, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
 B_policy_high = permute(reshape(calibrated_model_solution.B_policy_high, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
 D_policy = permute(reshape(calibrated_model_solution.D_policy, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
-
+B_policy_high(D_policy == 1) = nan;
+B_policy_low(D_policy==1) = nan;
+B_policy_low = B_policy_low + 1;
+B_policy_high = B_policy_high + 1;
 
 
 
