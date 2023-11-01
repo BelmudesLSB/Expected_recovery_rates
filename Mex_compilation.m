@@ -9,7 +9,7 @@ clear;
 mex main.cpp economy.cpp initialization.cpp auxiliary.cpp 
 
 %% Common parameters:
-params.b_grid_size = 51;               % Number of points in the grid for the bond price.
+params.b_grid_size = 50;               % Number of points in the grid for the bond price.
 params.b_grid_min = -0.6;               % Minimum value of the bond price.
 params.b_grid_max = 0.00;               % Maximum value of the bond price.
 params.y_grid_size = 6;                 % Number of points in the grid for the income.
@@ -36,7 +36,7 @@ toc;
 
 %% Value function for check:
 excel_filename = 'V.xlsx';
-xlswrite(excel_filename, calibrated_model_solution.V);
+xlswrite(excel_filename, calibrated_model_solution.V,1, 'A1');
 
 %% Format variables:
 
