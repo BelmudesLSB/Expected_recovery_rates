@@ -23,7 +23,7 @@ params.theta = 0.282;                   % Probability of a re-entry.
 params.max_iter = 2000;                 % Maximum number of iterations.
 params.tol = 1e-7;                      % Tolerance for the convergence.
 params.m = 3;                           % Number of standard deviations for the income grid.
-params.alpha_low = 0.15;                % Low recovery on defaulted debt.
+params.alpha_low = 0.0;                % Low recovery on defaulted debt.
 params.alpha_high = 0.3;                % High recovery on defaulted debt.
 
 %% Run code with both alphas;
