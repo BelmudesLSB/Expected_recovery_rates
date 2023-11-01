@@ -34,7 +34,12 @@ save('Solution', 'calibrated_model_solution')
 save('Parameters', 'params')
 toc;
 
+%% Value function for check:
+excel_filename = 'V.xlsx';
+xlswrite(excel_filename, calibrated_model_solution.V);
+
 %% Format variables:
+
 
 % Exogenous:
 Y_grid = calibrated_model_solution.Y_grid;
