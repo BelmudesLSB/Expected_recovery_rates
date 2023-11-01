@@ -120,7 +120,7 @@ void Economy::update_v_and_default_policy(){
  
 // Update prices given a default policies;
 void Economy::update_price(){
-    #pragma omp parallel for collapse(3) schedule(dynamic)
+    #pragma omp parallel for collapse(3) schedule(dynamic) //num_threads(10)
     for (int i=0; i<Y_grid_size; i++)
     {
         for (int j=0; j<B_grid_size; j++)
@@ -145,7 +145,7 @@ void Economy::update_price(){
 void Economy::update_vd(){
     double* Vd0 = new double[Y_grid_size * B_grid_size* B_grid_size];      // Store initial value function at default:
     copy_vector(V_d, Vd0, Y_grid_size * B_grid_size * B_grid_size);
-    #pragma omp parallel for collapse(3) schedule(dynamic)
+    #pragma omp parallel for collapse(3) schedule(dynamic) //num_threads(10)
     for (int i=0; i<Y_grid_size; i++)
     {
         for (int j=0; j<B_grid_size; j++)
@@ -168,7 +168,7 @@ void Economy::update_vd(){
 
 // Update value of repayment and bond policy:
 void Economy::update_vr_and_bond_policy(){
-    #pragma omp parallel for collapse(3) schedule(dynamic) 
+    #pragma omp parallel for collapse(3) schedule(dynamic) //num_threads(10)
     for (int i=0; i<Y_grid_size; i++)
     {
         for (int j=0; j<B_grid_size; j++)
@@ -240,7 +240,7 @@ int Economy::solve_model(){
         diff_vd = 0;
         diff_vr = 0;
 
-        #pragma omp parallel for schedule(dynamic) reduction(max:diff_q_low, diff_q_high, diff_vd, diff_vr) 
+        #pragma omp parallel for schedule(dynamic) reduction(max:diff_q_low, diff_q_high, diff_vd, diff_vr) //num_threads(10)
         for (int id =0; id <Y_grid_size * B_grid_size * B_grid_size; id++)
         {
             diff_q_low = fabs(Q0_low[id] - Q_low[id]);
