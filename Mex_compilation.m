@@ -20,7 +20,7 @@ params.r = 0.017;                       % Interest rate.
 params.rho = 0.945;                     % Persistence of the income.
 params.sigma = 0.025;                   % Standard deviation of the income.
 params.theta = 0.282;                   % Probability of a re-entry.
-params.max_iter = 2000;                 % Maximum number of iterations.
+params.max_iter = 300;                 % Maximum number of iterations.
 params.tol = 1e-7;                      % Tolerance for the convergence.
 params.m = 3;                           % Number of standard deviations for the income grid.
 params.alpha_low = 0;                   % Low recovery on defaulted debt.
@@ -34,12 +34,7 @@ save('Solution', 'calibrated_model_solution')
 save('Parameters', 'params')
 toc;
 
-%% Value function for check:
-excel_filename = 'V.xlsx';
-xlswrite(excel_filename, calibrated_model_solution.V);
-
 %% Format variables:
-
 
 % Exogenous:
 Y_grid = calibrated_model_solution.Y_grid;

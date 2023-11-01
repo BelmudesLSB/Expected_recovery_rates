@@ -225,7 +225,6 @@ int Economy::solve_model(){
     double diff_q_high = 1;
     double diff_vd = 1;
     double diff_vr = 1;
-    double aux_q_low, aux_q_high, aux_vd, aux_vr;
 
     while (iter < Max_iter){
       
@@ -233,36 +232,19 @@ int Economy::solve_model(){
         update_price();                                 // update price:
         update_vd();                                    // update value at default:
         update_vr_and_bond_policy();                    // update value of repayment and bond policy:
-        
-        diff_q_low = 0;                                 // Difference between prices.
-        diff_q_high = 0;                                // Difference between prices.
-        diff_vd = 0;                                    // Difference between value function at default.
-        diff_vr = 0;                                    // Difference between value function at reentry.
-        
-        for (int i=0; i<Y_grid_size; i++)
+
+        diff_q_high = 0;
+        diff_q_low = 0;
+        diff_vd = 0;
+        diff_vr = 0;
+
+        #pragma omp parallel for schedule(dynamic) reduction(max:diff_q_low, diff_q_high, diff_vd, diff_vr) 
+        for (int id =0; id <Y_grid_size * B_grid_size * B_grid_size; id++)
         {
-            for (int j=0; j<B_grid_size; j++)
-            {
-                for (int z=0; z<B_grid_size; z++)
-                {
-                    aux_q_low = fabs(Q0_low[i*B_grid_size*B_grid_size+j*B_grid_size+z] - Q_low[i*B_grid_size*B_grid_size+j*B_grid_size+z]);
-                    aux_q_high = fabs(Q0_high[i*B_grid_size*B_grid_size+j*B_grid_size+z] - Q_high[i*B_grid_size*B_grid_size+j*B_grid_size+z]);
-                    aux_vd = fabs(V_d[i*B_grid_size*B_grid_size+j*B_grid_size+z] - Vd0[i*B_grid_size*B_grid_size+j*B_grid_size+z]);
-                    aux_vr = fabs(V_r[i*B_grid_size*B_grid_size+j*B_grid_size+z] - Vr0[i*B_grid_size*B_grid_size+j*B_grid_size+z]);
-                    if (aux_q_low > diff_q_low){
-                        diff_q_low = aux_q_low;
-                    }
-                    if (aux_q_high > diff_q_high){
-                        diff_q_high = aux_q_high;
-                    }
-                    if (aux_vd > diff_vd){
-                        diff_vd = aux_vd;
-                    }
-                    if (aux_vr > diff_vr){
-                        diff_vr = aux_vr;
-                    }
-                }
-            }
+            diff_q_low = fabs(Q0_low[id] - Q_low[id]);
+            diff_q_high = fabs(Q0_high[id] - Q_high[id]);
+            diff_vd = fabs(V_d[id] - Vd0[id]);
+            diff_vr = fabs(V_r[id] - Vr0[id]);
         }
 
         if (diff_q_low < Tol && diff_q_high < Tol && diff_vd < Tol && diff_vr < Tol){
