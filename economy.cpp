@@ -120,6 +120,7 @@ void Economy::update_v_and_default_policy(){
  
 // Update prices given a default policies;
 void Economy::update_price(){
+    #pragma omp parallel for collapse(3) schedule(dynamic)
     for (int i=0; i<Y_grid_size; i++)
     {
         for (int j=0; j<B_grid_size; j++)
@@ -144,6 +145,7 @@ void Economy::update_price(){
 void Economy::update_vd(){
     double* Vd0 = new double[Y_grid_size * B_grid_size* B_grid_size];      // Store initial value function at default:
     copy_vector(V_d, Vd0, Y_grid_size * B_grid_size * B_grid_size);
+    #pragma omp parallel for collapse(3) schedule(dynamic)
     for (int i=0; i<Y_grid_size; i++)
     {
         for (int j=0; j<B_grid_size; j++)
