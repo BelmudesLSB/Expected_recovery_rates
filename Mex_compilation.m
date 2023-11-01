@@ -23,7 +23,7 @@ params.theta = 0.282;                  % Probability of a re-entry.
 params.max_iter = 300;                 % Maximum number of iterations.
 params.tol = 1e-7;                     % Tolerance for the convergence.
 params.m = 3;                          % Number of standard deviations for the income grid.
-params.alpha_low = 0;               % Low recovery on defaulted debt.
+params.alpha_low = 0;                   % Low recovery on defaulted debt.
 params.alpha_high = 0.3;               % High recovery on defaulted debt.
 
 %% Run code with both alphas;
@@ -68,4 +68,5 @@ figure(3)
 plot(B_grid, D_policy(:,50,3));
 figure(4)
 plot(B_grid, Q_high(:,50,4));
+
 

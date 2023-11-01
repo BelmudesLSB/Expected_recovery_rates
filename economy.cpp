@@ -193,9 +193,9 @@ void Economy::update_vr_and_bond_policy(){
                                 B_policy_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = x_high;
                             }
                         }
+                    }
                 }
                 V_r[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_v;
-                }
             }
         }
     }
