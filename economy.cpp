@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <mex.h>
+#include <omp.h>
 
 //! Note: For computations we first iterate over the low recovery bond and then iterate over the high recovery bond.
 //! Vectors are then V=[(b_low1;b_high1;y_1), (b_low2;b_high1;y_1),...,(b_lown;b_high1;y_1),(b_low1;b_high2;y_1),...

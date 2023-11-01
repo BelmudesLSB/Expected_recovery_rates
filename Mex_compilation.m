@@ -9,10 +9,10 @@ clear;
 mex main.cpp economy.cpp initialization.cpp auxiliary.cpp 
 
 %% Common parameters:
-params.b_grid_size = 251;                % Number of points in the grid for the bond price.
+params.b_grid_size = 51;               % Number of points in the grid for the bond price.
 params.b_grid_min = -0.6;               % Minimum value of the bond price.
 params.b_grid_max = 0.00;               % Maximum value of the bond price.
-params.y_grid_size = 51;                 % Number of points in the grid for the income.
+params.y_grid_size = 6;                % Number of points in the grid for the income.
 params.y_default = 0.969;               % Maximum income under default.
 params.beta = 0.953;                    % Discount factor.
 params.gamma = 2;                       % Risk aversion.
