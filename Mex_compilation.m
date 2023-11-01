@@ -55,7 +55,10 @@ V_d = permute(reshape(calibrated_model_solution.V_d, params.b_grid_size, params.
 B_policy_low = permute(reshape(calibrated_model_solution.B_policy_low, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
 B_policy_high = permute(reshape(calibrated_model_solution.B_policy_high, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
 D_policy = permute(reshape(calibrated_model_solution.D_policy, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
-
+B_policy_low(D_policy == 1) = NaN;
+B_policy_high(D_policy == 1) = NaN;
+B_policy_high = B_policy_high + 1;
+B_policy_low = B_policy_low + 1;
 %% Problems with the code: you tend to borrow as much as you can, close to default.
 
 plot(B_grid, B_policy_high(50,:,4))
