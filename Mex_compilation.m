@@ -9,8 +9,8 @@ clear;
 mex main.cpp economy.cpp initialization.cpp auxiliary.cpp 
 
 %% Common parameters:
-params.b_grid_size = 50;                % Number of points in the grid for the bond price.
-params.b_grid_min = -0.6;               % Minimum value of the bond price.
+params.b_grid_size = 300;                % Number of points in the grid for the bond price.
+params.b_grid_min = -1.2;               % Minimum value of the bond price.
 params.b_grid_max = 0.00;               % Maximum value of the bond price.
 params.y_grid_size = 6;                 % Number of points in the grid for the income.
 params.y_default = 0.969;               % Maxsimum income under default.
@@ -131,7 +131,7 @@ V_high = reshape(arellano_solution_alpha_high.V, params.b_grid_size, params.y_gr
 
 %% plot: Value functions:
 
-y_choice = 30;
+y_choice = 3;
 figure('Position', [100, 100, 800, 600]); % Adjust the figure size as needed
 hold on;
 plot(B_grid, V_benchmark(y_choice, :), 'Color', [0.5, 0.5, 0.5], 'LineWidth', 2, 'LineStyle','--'); % Gray line
