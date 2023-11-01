@@ -12,7 +12,7 @@ mex main.cpp economy.cpp initialization.cpp auxiliary.cpp
 params.b_grid_size = 51;               % Number of points in the grid for the bond price.
 params.b_grid_min = -0.6;               % Minimum value of the bond price.
 params.b_grid_max = 0.00;               % Maximum value of the bond price.
-params.y_grid_size = 6;                % Number of points in the grid for the income.
+params.y_grid_size = 6;                 % Number of points in the grid for the income.
 params.y_default = 0.969;               % Maximum income under default.
 params.beta = 0.953;                    % Discount factor.
 params.gamma = 2;                       % Risk aversion.
@@ -23,7 +23,7 @@ params.theta = 0.282;                   % Probability of a re-entry.
 params.max_iter = 2000;                 % Maximum number of iterations.
 params.tol = 1e-7;                      % Tolerance for the convergence.
 params.m = 3;                           % Number of standard deviations for the income grid.
-params.alpha_low = 0;                   % Low recovery on defaulted debt.
+params.alpha_low = 0.15;                % Low recovery on defaulted debt.
 params.alpha_high = 0.3;                % High recovery on defaulted debt.
 
 %% Run code with both alphas;
@@ -56,7 +56,9 @@ B_policy_low = permute(reshape(calibrated_model_solution.B_policy_low, params.b_
 B_policy_high = permute(reshape(calibrated_model_solution.B_policy_high, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
 D_policy = permute(reshape(calibrated_model_solution.D_policy, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
 
+%% Problems with the code: you tend to borrow as much as you can, close to default.
 
+plot(B_grid, B_policy_high(50,:,4))
 
 
 
