@@ -9,10 +9,10 @@ clear;
 mex main.cpp economy.cpp initialization.cpp auxiliary.cpp 
 
 %% Common parameters:
-params.b_grid_size = 500;                % Number of points in the grid for the bond price.
-params.b_grid_min = -0.8;               % Minimum value of the bond price.
+params.b_grid_size = 50;                % Number of points in the grid for the bond price.
+params.b_grid_min = -0.6;               % Minimum value of the bond price.
 params.b_grid_max = 0.00;               % Maximum value of the bond price.
-params.y_grid_size = 51;                % Number of points in the grid for the income.
+params.y_grid_size = 6;                 % Number of points in the grid for the income.
 params.y_default = 0.969;               % Maxsimum income under default.
 params.beta = 0.953;                    % Discount factor.
 params.gamma = 2;                       % Risk aversion.
@@ -105,6 +105,7 @@ P = reshape(arellano_solution_alpha_low.P, params.y_grid_size, params.y_grid_siz
 Q_benchmark = reshape(arellano_solution_alpha_benchmark.Q, params.b_grid_size, params.y_grid_size)';
 B_policy_benchmark = reshape(arellano_solution_alpha_benchmark.B_policy, params.b_grid_size, params.y_grid_size)'+1; %MATLAB starts indexing at 1.
 D_policy_benchmark = reshape(arellano_solution_alpha_benchmark.D_policy, params.b_grid_size, params.y_grid_size)';
+B_policy_benchmark(D_policy_benchmark == 1) = nan;
 V_r_benchmark = reshape(arellano_solution_alpha_benchmark.V_r, params.b_grid_size, params.y_grid_size)';
 V_d_benchmark = reshape(arellano_solution_alpha_benchmark.V_d, params.b_grid_size, params.y_grid_size)';
 V_benchmark = reshape(arellano_solution_alpha_benchmark.V, params.b_grid_size, params.y_grid_size)';
@@ -113,6 +114,7 @@ V_benchmark = reshape(arellano_solution_alpha_benchmark.V, params.b_grid_size, p
 Q_low = reshape(arellano_solution_alpha_low.Q, params.b_grid_size, params.y_grid_size)';
 B_policy_low = reshape(arellano_solution_alpha_low.B_policy, params.b_grid_size, params.y_grid_size)'+1; %MATLAB starts indexing at 1.
 D_policy_low = reshape(arellano_solution_alpha_low.D_policy, params.b_grid_size, params.y_grid_size)';
+B_policy_low(D_policy_low == 1) = nan;
 V_r_low = reshape(arellano_solution_alpha_low.V_r, params.b_grid_size, params.y_grid_size)';
 V_d_low = reshape(arellano_solution_alpha_low.V_d, params.b_grid_size, params.y_grid_size)';
 V_low = reshape(arellano_solution_alpha_low.V, params.b_grid_size, params.y_grid_size)';
@@ -121,6 +123,7 @@ V_low = reshape(arellano_solution_alpha_low.V, params.b_grid_size, params.y_grid
 Q_high = reshape(arellano_solution_alpha_high.Q, params.b_grid_size, params.y_grid_size)';
 B_policy_high = reshape(arellano_solution_alpha_high.B_policy, params.b_grid_size, params.y_grid_size)'+1; %MATLAB starts indexing at 1.
 D_policy_high = reshape(arellano_solution_alpha_high.D_policy, params.b_grid_size, params.y_grid_size)';
+B_policy_high(D_policy_high == 1) = nan;
 V_r_high = reshape(arellano_solution_alpha_high.V_r, params.b_grid_size, params.y_grid_size)';
 V_d_high = reshape(arellano_solution_alpha_high.V_d, params.b_grid_size, params.y_grid_size)';
 V_high = reshape(arellano_solution_alpha_high.V, params.b_grid_size, params.y_grid_size)';
