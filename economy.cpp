@@ -5,6 +5,8 @@
 #include <cmath>
 #include <mex.h>
 
+//! Note: For computations we first iterate over the low recovery bond and then iterate over the high recovery bond.
+//! Vectors are then V=[(b_low1;b_high1;y_1), (b_low2;b_high1;y_1),...,(b_lown;b_high1;y_1),(b_low1;b_high2;y_1),...
 
 Economy::Economy(int b_grid_size, double b_grid_min, double b_grid_max, int y_grid_size, double y_default, double beta, double gamma, double r, double rho, double sigma, double theta, double alpha_low, double alpha_high, double tol, int max_iter, double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q_low, double* ptr_q_high, int* ptr_b_policy_low, int* ptr_b_policy_high, double* ptr_d_policy){
   
@@ -127,11 +129,11 @@ void Economy::update_price(){
                 double aux_high = 0;
                 for (int i_prime = 0; i_prime < Y_grid_size; i_prime++)
                 {
-                    aux_low += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j]) + D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j] * Alpha_low) *  (1/(1+R));
-                    aux_high += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j]) + D_policy[i_prime*(B_grid_size*B_grid_size)+z*B_grid_size+j] * Alpha_high) *  (1/(1+R));
+                    aux_low += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z]) + D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z] * Alpha_low) *  (1/(1+R));
+                    aux_high += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z]) + D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z] * Alpha_high) *  (1/(1+R));
                 }
-                Q_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_high;
                 Q_low[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_low;
+                Q_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_high;
             }
         }
     }
@@ -151,10 +153,10 @@ void Economy::update_vd(){
                 double E_Vd = 0;
                 for (int i_prime = 0; i_prime < Y_grid_size; i_prime++)
                 {
-                    E_V += P[i*Y_grid_size+i_prime] * V[i_prime*B_grid_size*B_grid_size+(B_grid_size-1)*B_grid_size+(B_grid_size-1)];           // Expected value given exclusion and zero debt.
+                    E_V += P[i*Y_grid_size+i_prime] * V[i_prime*(B_grid_size*B_grid_size)+(B_grid_size-1)*B_grid_size+(B_grid_size-1)];           // Expected value given exclusion and zero debt.
                     E_Vd += P[i*Y_grid_size+i_prime] * V_d[i_prime*(B_grid_size*B_grid_size)+(B_grid_size-1)*B_grid_size+(B_grid_size-1)];         // Expected value given exclusion and zero debt.      
                 }
-            V_d[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = utility(Y_grid_default[i] + Alpha_low * B_grid[z] + Alpha_high * B_grid[j], Gamma, Tol) + Beta * (Theta * E_V + (1-Theta) * E_Vd); // Payoff of recovery in current period.
+                V_d[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = utility(Y_grid_default[i] + Alpha_low * B_grid[z] + Alpha_high * B_grid[j], Gamma, Tol) + Beta * (Theta * E_V + (1-Theta) * E_Vd); // Payoff of recovery in current period.
             }
         }
     }
@@ -167,7 +169,7 @@ void Economy::update_vr_and_bond_policy(){
     {
         for (int j=0; j<B_grid_size; j++)
         {
-            for (int z=0; z<B_grid_size; z++)
+            for (int z=0; z<B_grid_size; z++) // Condition on (y,b_low,b_high).
             {
                 double aux_v = -1000000000;                          
                 for (int x_low = 0; x_low<B_grid_size; x_low++)
@@ -176,7 +178,7 @@ void Economy::update_vr_and_bond_policy(){
                     {  
                         double E_V_rx = 0;                                      // Expected continuation value of repayment following policy x_low and x_high.
                         double c = Y_grid[i] - Q_low[i*(B_grid_size*B_grid_size)+x_high*B_grid_size+x_low] * B_grid[x_low] - Q_high[i*(B_grid_size*B_grid_size)+x_high*B_grid_size+x_low] * B_grid[x_high] + B_grid[j] + B_grid[z];
-                        if (c >= Tol){
+                        if (c > Tol){
                             for (int i_prime = 0; i_prime < Y_grid_size; i_prime++){
                                 E_V_rx += P[i*Y_grid_size+i_prime] * V[i_prime*(B_grid_size*B_grid_size)+x_high*B_grid_size+x_low];
                             }
@@ -197,7 +199,6 @@ void Economy::update_vr_and_bond_policy(){
 
 // Solve the model:
 int Economy::solve_model(){
-    
     // Initialize economy:
     if (initialize_economy() == EXIT_SUCCESS){
         mexPrintf("Economy initialized successfully.\n");
@@ -205,7 +206,6 @@ int Economy::solve_model(){
         mexPrintf("Economy initialization failed.\n");
         return EXIT_FAILURE;
     }
-
     // Guess value functions and prices and copy initial values:
     guess_vd_vr_q();    
     double* Vd0 = new double[Y_grid_size *  B_grid_size * B_grid_size];     // Store initial value function at default:

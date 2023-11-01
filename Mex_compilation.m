@@ -9,10 +9,10 @@ clear;
 mex main.cpp economy.cpp initialization.cpp auxiliary.cpp 
 
 %% Common parameters:
-params.b_grid_size = 50;                % Number of points in the grid for the bond price.
+params.b_grid_size = 251;                % Number of points in the grid for the bond price.
 params.b_grid_min = -0.6;               % Minimum value of the bond price.
 params.b_grid_max = 0.00;               % Maximum value of the bond price.
-params.y_grid_size = 5;                 % Number of points in the grid for the income.
+params.y_grid_size = 51;                 % Number of points in the grid for the income.
 params.y_default = 0.969;               % Maximum income under default.
 params.beta = 0.953;                    % Discount factor.
 params.gamma = 2;                       % Risk aversion.
@@ -42,7 +42,11 @@ Y_grid_default = calibrated_model_solution.Y_grid_default;
 B_grid = calibrated_model_solution.B_grid;
 P = reshape(calibrated_model_solution.P, params.y_grid_size, params.y_grid_size)';
 
-%Endogenous:
+%Endogenous: this stores everthing in 3-d matrices. Each matrix is:
+%   |1, 2, 3, ..., nb  
+%   |nb,nb+1,....,2nb-1,
+%   |2nb,....
+
 Q_low = permute(reshape(calibrated_model_solution.Q_low, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
 Q_high = permute(reshape(calibrated_model_solution.Q_high, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
 V = permute(reshape(calibrated_model_solution.V, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
