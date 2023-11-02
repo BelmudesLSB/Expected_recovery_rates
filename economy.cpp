@@ -264,7 +264,7 @@ int Economy::solve_model(){
             return EXIT_SUCCESS;
 
         } else {
-            if (iter % 25 == 0){
+            if (false){
                 mexPrintf("Iteration: %d\n", iter);
                 mexPrintf("Difference between value function at default: %f\n", diff_vd);
                 mexPrintf("Difference between value function at reentry: %f\n", diff_vr);

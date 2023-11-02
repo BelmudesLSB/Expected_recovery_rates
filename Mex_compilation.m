@@ -9,8 +9,8 @@ clear;
 mex CXXFLAGS="$CXXFLAGS -fopenmp -O3" LDFLAGS="$LDFLAGS -fopenmp" main.cpp economy.cpp initialization.cpp auxiliary.cpp 
 
 %% Common parameters:
-params.b_grid_size = 75;              % Number of points in the grid for the bond price.
-params.b_grid_min = -1.2;              % Minimum value of the bond price.
+params.b_grid_size = 50;              % Number of points in the grid for the bond price.
+params.b_grid_min = -1.45;              % Minimum value of the bond price.
 params.b_grid_max = 0.00;              % Maximum value of the bond price.
 params.y_grid_size = 10;               % Number of points in the grid for the income.
 params.y_default = 0.969;              % Maximum income under default.
@@ -20,8 +20,8 @@ params.r = 0.017;                      % Interest rate.
 params.rho = 0.945;                    % Persistence of the income.
 params.sigma = 0.025;                  % Standard deviation of the income.
 params.theta = 0.282;                  % Probability of a re-entry.
-params.max_iter = 300;                 % Maximum number of iterations.
-params.tol = 1e-7;                     % Tolerance for the convergence.
+params.max_iter = 20000;                 % Maximum number of iterations.
+params.tol = 1e-6;                     % Tolerance for the convergence.
 params.m = 3;                          % Number of standard deviations for the income grid.
 params.alpha_low = 0;                   % Low recovery on defaulted debt.
 params.alpha_high = 0.3;               % High recovery on defaulted debt.
