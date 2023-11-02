@@ -8,13 +8,13 @@ clear;
 mex CXXFLAGS="$CXXFLAGS -fopenmp -O3" LDFLAGS="$LDFLAGS -fopenmp" main.cpp economy.cpp initialization.cpp auxiliary.cpp 
 
 %% Common parameters:
-params.b_grid_size_lowr = 100;           % Number of points in the grid for the bond price.
-params.b_grid_size_highr = 200;
-params.b_grid_min_lowr = -0.8;         % Minimum value of the bond price.
-params.b_grid_min_highr = -1.45;
-params.b_grid_max_lowr = 0.0;         % Maximum value of the bond price.
+params.b_grid_size_lowr = 60;           % Number of points in the grid for the bond price.
+params.b_grid_size_highr = 100;
+params.b_grid_min_lowr = -0.8;          % Minimum value of the bond price.
+params.b_grid_min_highr = -1.5;
+params.b_grid_max_lowr = 0.0;           % Maximum value of the bond price.
 params.b_grid_max_highr = 0.0;
-params.y_grid_size = 21;               % Number of points in the grid for the income.
+params.y_grid_size = 17;               % Number of points in the grid for the income.
 params.y_default = 0.969;              % Maximum income under default.
 params.beta = 0.953;                   % Discount factor.
 params.gamma = 2;                      % Risk aversion.
@@ -35,43 +35,65 @@ save('Solution', 'calibrated_model_solution')
 save('Parameters', 'params')
 toc;
 
-%% Perform checks:
-
-min(min(calibrated_model_solution.B_policy_highr(calibrated_model_solution.D_policy==0)))
+%% Perform checks to see if bounds bind or not:
+calibrated_model_solution.B_policy_highr(calibrated_model_solution.D_policy==1) = nan;
+min(calibrated_model_solution.B_policy_highr(calibrated_model_solution.D_policy==0))
+find(min(calibrated_model_solution.B_policy_highr(calibrated_model_solution.D_policy==0)))
 %% Format variables:
 
 % Exogenous:
 Y_grid = calibrated_model_solution.Y_grid;
 Y_grid_default = calibrated_model_solution.Y_grid_default;
-B_grid = calibrated_model_solution.B_grid;
+B_grid_lowr = calibrated_model_solution.B_grid_lowr;
+B_grid_highr = calibrated_model_solution.B_grid_highr;
 P = reshape(calibrated_model_solution.P, params.y_grid_size, params.y_grid_size)';
+% Endogenous objects:
+Q_lowr = permute(reshape(calibrated_model_solution.Q_lowr, params.b_grid_size_lowr, params.b_grid_size_highr, params.y_grid_size), [2, 1, 3]);
+Q_highr = permute(reshape(calibrated_model_solution.Q_highr, params.b_grid_size_lowr, params.b_grid_size_highr, params.y_grid_size), [2, 1, 3]);
+V = permute(reshape(calibrated_model_solution.V, params.b_grid_size_lowr, params.b_grid_size_highr, params.y_grid_size), [2, 1, 3]);
+V_r = permute(reshape(calibrated_model_solution.V_r, params.b_grid_size_lowr, params.b_grid_size_highr, params.y_grid_size), [2, 1, 3]);
+V_d = permute(reshape(calibrated_model_solution.V_d, params.b_grid_size_lowr, params.b_grid_size_highr, params.y_grid_size), [2, 1, 3]);
+B_policy_lowr = permute(reshape(calibrated_model_solution.B_policy_lowr, params.b_grid_size_lowr, params.b_grid_size_highr, params.y_grid_size), [2, 1, 3]);
+B_policy_highr = permute(reshape(calibrated_model_solution.B_policy_highr, params.b_grid_size_lowr, params.b_grid_size_highr, params.y_grid_size), [2, 1, 3]);
+D_policy = permute(reshape(calibrated_model_solution.D_policy, params.b_grid_size_lowr, params.b_grid_size_highr, params.y_grid_size), [2, 1, 3]);
+B_policy_highr(D_policy == 1) = nan;
+B_policy_lowr(D_policy==1) = nan;
+B_policy_lowr = B_policy_lowr + 1;
+B_policy_highr = B_policy_highr + 1;
 
-%Endogenous: this stores everthing in 3-d matrices. Each matrix is:
-%   |1, 2, 3, ..., nb  
-%   |nb,nb+1,....,2nb-1,
-%   |2nb,....
+%% PLots for presentation:
 
-Q_low = permute(reshape(calibrated_model_solution.Q_low, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
-Q_high = permute(reshape(calibrated_model_solution.Q_high, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
-V = permute(reshape(calibrated_model_solution.V, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
-V_r = permute(reshape(calibrated_model_solution.V_r, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
-V_d = permute(reshape(calibrated_model_solution.V_d, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
-B_policy_low = permute(reshape(calibrated_model_solution.B_policy_low, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
-B_policy_high = permute(reshape(calibrated_model_solution.B_policy_high, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
-D_policy = permute(reshape(calibrated_model_solution.D_policy, params.b_grid_size, params.b_grid_size, params.y_grid_size), [2, 1, 3]);
-B_policy_high(D_policy == 1) = nan;
-B_policy_low(D_policy==1) = nan;
-B_policy_low = B_policy_low + 1;
-B_policy_high = B_policy_high + 1;
+% Assuming B_grid_highr contains your x-values
+% V(:,params.b_grid_size_lowr, y_choice) represents the y-values for the chosen y_choice
+y_choice = 12;
+x_values = B_grid_highr;
+y_values = V(:, params.b_grid_size_lowr, y_choice);
+% Define the x-range from -0.8 to 0
+x_range = [-0.8, 0];
+% Find the indices that fall within the specified x-range
+indices = x_values >= x_range(1) & x_values <= x_range(2);
+% Plot the selected data
+plot(x_values(indices), y_values(indices));
+% Add labels and title if desired
+xlabel('X-axis Label');
+ylabel('Y-axis Label');
+title('Plot Title');
 
-%% Small analysis
-figure(1)
-plot(B_grid, B_policy_high(:,50,4));
-figure(2)
-plot(B_grid, D_policy(:,50,4));
-figure(3)
-plot(B_grid, D_policy(:,50,3));
-figure(4)
-plot(B_grid, Q_high(:,50,4));
+% Assuming B_grid_highr contains your x-values
+% V(:,params.b_grid_size_lowr, y_choice) represents the y-values for the chosen y_choice
+y_choice = 12;
+x_values = B_grid_lowr;
+y_values = V(params.b_grid_size_highr, :, y_choice);
+% Define the x-range from -0.8 to 0
+x_range = [-0.8, 0];
+% Find the indices that fall within the specified x-range
+indices = x_values >= x_range(1) & x_values <= x_range(2);
+% Plot the selected data
+plot(x_values(indices), y_values(indices));
+% Add labels and title if desired
+xlabel('X-axis Label');
+ylabel('Y-axis Label');
+title('Plot Title');
+
 
 

@@ -235,7 +235,7 @@ int Economy::solve_model(){
     copy_vector(Q_highr, Q0_highr, Y_grid_size * B_grid_size_highr * B_grid_size_lowr);
 
     // Initialize difference between value functions:
-    int iter = Max_iter - 1;          
+    int iter = 0;          
     double diff_q_lowr = 1;
     double diff_q_highr = 1;
     double diff_vd = 1;
