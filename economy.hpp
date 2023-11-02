@@ -46,7 +46,7 @@ class Economy{
 
         // Initialize economy:
         int initialize_economy();
-        /*
+        
         // Solution Methods:
             // Guess:
             void guess_vd_vr_q();
@@ -65,7 +65,6 @@ class Economy{
 
             // Solve:
             int solve_model();
-            */
 };
 
 #endif

@@ -79,14 +79,14 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
     
     mexPrintf("Initialization done.\n");
     // Solve the model:
-    economy.initialize_economy();
+    //economy.initialize_economy();
     //economy.guess_vd_vr_q();
     //economy.update_v_and_default_policy();
     //economy.update_price(); 
     //economy.update_vd();
     //economy.update_vr_and_bond_policy();
     //mexPrintf("Solving the model.\n"); 
-    //economy.solve_model();
+    economy.solve_model();
     
     
     mexPrintf("Copying results to MATLAB.\n");
