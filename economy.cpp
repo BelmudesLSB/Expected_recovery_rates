@@ -7,15 +7,17 @@
 #include <omp.h>
 
 //! Note: For computations we first iterate over the low recovery bond and then iterate over the high recovery bond.
-//! Vectors are then V=[(b_low1;b_high1;y_1), (b_low2;b_high1;y_1),...,(b_lown;b_high1;y_1),(b_low1;b_high2;y_1),...
+//! Vectors are then V=[(b_lowr1;b_highr1;y_1), (b_lowr2;b_highr1;y_1),...,(b_lowrn;b_highr1;y_1),(b_lowr1;b_highr2;y_1),...
 
-Economy::Economy(int b_grid_size_low, int b_grid_size_high, double b_grid_min, double b_grid_max, int y_grid_size, double y_default, double beta, double gamma, double r, double rho, double sigma, double theta, double alpha_low, double alpha_high, double tol, int max_iter, double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid_low, double* ptr_b_grid_high, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q_low, double* ptr_q_high, int* ptr_b_policy_low, int* ptr_b_policy_high, double* ptr_d_policy){
+Economy::Economy(int b_grid_size_lowr, int b_grid_size_highr, double b_grid_min_lowr, double b_grid_min_highr, double b_grid_max_lowr, double b_grid_max_highr, int y_grid_size, double y_default, double beta, double gamma, double r, double rho, double sigma, double theta, double alpha_lowr, double alpha_highr, double tol, int max_iter, double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid_lowr, double* ptr_b_grid_highr, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q_lowr, double* ptr_q_highr, int* ptr_b_policy_lowr, int* ptr_b_policy_highr, double* ptr_d_policy){
   
     // Parameters:
-    B_grid_size_low = b_grid_size_low;            // Number of points in the grid for the bond price.
-    B_grid_size_high = b_grid_size_high;          // Number of points in the grid for the bond price.
-    B_grid_min = b_grid_min;              // Minimum value of the bond price.
-    B_grid_max = b_grid_max;              // Maximum value of the bond price.
+    B_grid_size_lowr = b_grid_size_lowr;            // Number of points in the grid for the bond price.
+    B_grid_size_highr = b_grid_size_highr;          // Number of points in the grid for the bond price.
+    B_grid_min_lowr = b_grid_min_lowr;              // Minimum value of the bond price.
+    B_grid_min_highr = b_grid_min_highr;
+    B_grid_max_lowr = b_grid_max_lowr;              // Maximum value of the bond price.
+    b_grid_max_highr = b_grid_max_highr;
     Y_grid_size = y_grid_size;            // Number of points in the grid for the income.
     Y_default = y_default;                // Maximum income under default.
     Beta = beta;                          // Discount factor.
@@ -24,8 +26,8 @@ Economy::Economy(int b_grid_size_low, int b_grid_size_high, double b_grid_min, d
     Rho = rho;                            // Persistence of the income.
     Sigma = sigma;                        // Standard deviation of the income.
     Theta = theta;                        // Probability of a re-entry.
-    Alpha_low = alpha_low;                // Recovery rate for the low recovery debt.
-    Alpha_high = alpha_high;              // Recovery rate for the high recovery debt.
+    Alpha_lowr = alpha_lowr;                // Recovery rate for the low recovery debt.
+    Alpha_highr = alpha_highr;              // Recovery rate for the high recovery debt.
     Tol = tol;                            // Tolerance for the convergence.
     Max_iter = max_iter;                  // Maximum number of iterations.
     M = m;                                // Number of standard deviations for the income grid.
@@ -33,16 +35,16 @@ Economy::Economy(int b_grid_size_low, int b_grid_size_high, double b_grid_min, d
     // Name the pointer to the arrays we will be working:
     Y_grid = ptr_y_grid;                  // Income grid.
     Y_grid_default = ptr_y_grid_default;  // Income grid for the default state.
-    B_grid_low = ptr_b_grid_low;                  // Bond price grid.
-    B_grid_high = ptr_b_grid_high;                  // Bond price grid.
+    B_grid_lowr = ptr_b_grid_lowr;                  // Bond price grid.
+    B_grid_highr = ptr_b_grid_highr;                  // Bond price grid.
     P = ptr_p_grid;                       // Transition matrix.
     V = ptr_v;                            // Value function.
     V_r = ptr_v_r;                        // Value function under re-entry.
     V_d = ptr_v_d;                        // Value function under default.
-    Q_low = ptr_q_low;                    // Price for the low recovery debt.
-    Q_high = ptr_q_high;                  // Price for the high recovery debt.
-    B_policy_low = ptr_b_policy_low;      // Bond policy for the low recovery debt.
-    B_policy_high = ptr_b_policy_high;    // Bond policy for the high recovery debt.
+    Q_lowr = ptr_q_lowr;                    // Price for the low recovery debt.
+    Q_highr = ptr_q_highr;                  // Price for the high recovery debt.
+    B_policy_lowr = ptr_b_policy_lowr;      // Bond policy for the low recovery debt.
+    B_policy_highr = ptr_b_policy_highr;    // Bond policy for the high recovery debt.
     D_policy = ptr_d_policy;              // Default policy.
     
 }
@@ -50,14 +52,14 @@ Economy::Economy(int b_grid_size_low, int b_grid_size_high, double b_grid_min, d
 // Create grids and store it in the space previously allocated:
 int Economy::initialize_economy(){
     // Create the grid for the income:
-    create_bond_grids(B_grid_low, B_grid_size_low, B_grid_max, B_grid_min);
-    create_bond_grids(B_grid_high, 10, B_grid_max, B_grid_min);
+    create_bond_grids(B_grid_lowr, B_grid_size_lowr, B_grid_max_lowr, B_grid_min_lowr);
+    create_bond_grids(B_grid_highr, B_grid_size_highr, B_grid_max_lowr, B_grid_min_highr);
 
-    if (B_grid_low[B_grid_size_low - 1] > Tol || B_grid_low[B_grid_size_low - 1] < -Tol)
+    if (B_grid_lowr[B_grid_size_lowr - 1] > Tol || B_grid_lowr[B_grid_size_lowr - 1] < -Tol)
     {
             mexPrintf("Error: the bond grid is not correctly initialized..\n");
             return EXIT_FAILURE;
-        if (B_grid_high[B_grid_size_high - 1] > Tol || B_grid_high[B_grid_size_high - 1] < -Tol)
+        if (B_grid_highr[B_grid_size_highr - 1] > Tol || B_grid_highr[B_grid_size_highr - 1] < -Tol)
         {
             mexPrintf("Error: the bond grid is not correctly initialized..\n");
             return EXIT_FAILURE;
@@ -98,8 +100,8 @@ void Economy::guess_vd_vr_q(){
             {
                 V_d[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = -20;
                 V_r[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = -20;
-                Q_low[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = 1/(1+R);
-                Q_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = 1/(1+R);
+                Q_lowr[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = 1/(1+R);
+                Q_highr[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = 1/(1+R);
             }
         }
     }
@@ -138,15 +140,15 @@ void Economy::update_price(){
         {
             for (int z=0; z<B_grid_size; z++)
             {
-                double aux_low = 0;
-                double aux_high = 0;
+                double aux_lowr = 0;
+                double aux_highr = 0;
                 for (int i_prime = 0; i_prime < Y_grid_size; i_prime++)
                 {
-                    aux_low += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z]) + D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z] * Alpha_low) *  (1/(1+R));
-                    aux_high += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z]) + D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z] * Alpha_high) *  (1/(1+R));
+                    aux_lowr += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z]) + D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z] * Alpha_lowr) *  (1/(1+R));
+                    aux_highr += P[i*Y_grid_size+i_prime] * ((1-D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z]) + D_policy[i_prime*(B_grid_size*B_grid_size)+j*B_grid_size+z] * Alpha_highr) *  (1/(1+R));
                 }
-                Q_low[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_low;
-                Q_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_high;
+                Q_lowr[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_lowr;
+                Q_highr[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = aux_highr;
             }
         }
     }
@@ -170,7 +172,7 @@ void Economy::update_vd(){
                     E_V += P[i*Y_grid_size+i_prime] * V[i_prime*(B_grid_size*B_grid_size)+(B_grid_size-1)*B_grid_size+(B_grid_size-1)];           // Expected value given exclusion and zero debt.
                     E_Vd += P[i*Y_grid_size+i_prime] * V_d[i_prime*(B_grid_size*B_grid_size)+(B_grid_size-1)*B_grid_size+(B_grid_size-1)];         // Expected value given exclusion and zero debt.      
                 }
-                V_d[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = utility(Y_grid_default[i] + Alpha_low * B_grid[z] + Alpha_high * B_grid[j], Gamma, Tol) + Beta * (Theta * E_V + (1-Theta) * E_Vd); // Payoff of recovery in current period.
+                V_d[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = utility(Y_grid_default[i] + Alpha_lowr * B_grid[z] + Alpha_highr * B_grid[j], Gamma, Tol) + Beta * (Theta * E_V + (1-Theta) * E_Vd); // Payoff of recovery in current period.
             }
         }
     }
@@ -187,21 +189,21 @@ void Economy::update_vr_and_bond_policy(){
             for (int z=0; z<B_grid_size; z++) // Each thread takes care of one element of the grid.
             {
                 double aux_v = -1000000000;                          
-                for (int x_low = 0; x_low<B_grid_size; x_low++)
+                for (int x_lowr = 0; x_lowr<B_grid_size; x_lowr++)
                 {
-                    for (int x_high = 0; x_high<B_grid_size; x_high++)
+                    for (int x_highr = 0; x_highr<B_grid_size; x_highr++)
                     {  
-                        double E_V_rx = 0;                                      // Expected continuation value of repayment following policy x_low and x_high.
-                        double c = Y_grid[i] - Q_low[i*(B_grid_size*B_grid_size)+x_high*B_grid_size+x_low] * B_grid[x_low] - Q_high[i*(B_grid_size*B_grid_size)+x_high*B_grid_size+x_low] * B_grid[x_high] + B_grid[j] + B_grid[z];
+                        double E_V_rx = 0;                                      // Expected continuation value of repayment following policy x_lowr and x_highr.
+                        double c = Y_grid[i] - Q_lowr[i*(B_grid_size*B_grid_size)+x_highr*B_grid_size+x_lowr] * B_grid[x_lowr] - Q_highr[i*(B_grid_size*B_grid_size)+x_highr*B_grid_size+x_lowr] * B_grid[x_highr] + B_grid[j] + B_grid[z];
                         if (c > Tol){
                             for (int i_prime = 0; i_prime < Y_grid_size; i_prime++){
-                                E_V_rx += P[i*Y_grid_size+i_prime] * V[i_prime*(B_grid_size*B_grid_size)+x_high*B_grid_size+x_low];
+                                E_V_rx += P[i*Y_grid_size+i_prime] * V[i_prime*(B_grid_size*B_grid_size)+x_highr*B_grid_size+x_lowr];
                             }
                             double temp = utility(c, Gamma, Tol) + Beta * E_V_rx;
                             if (temp >= aux_v){
                                 aux_v = temp;
-                                B_policy_low[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = x_low;
-                                B_policy_high[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = x_high;
+                                B_policy_lowr[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = x_lowr;
+                                B_policy_highr[i*(B_grid_size*B_grid_size)+j*B_grid_size+z] = x_highr;
                             }
                         }
                     }
@@ -227,15 +229,15 @@ int Economy::solve_model(){
     copy_vector(V_d, Vd0, Y_grid_size * B_grid_size * B_grid_size);
     double* Vr0 = new double[Y_grid_size *  B_grid_size * B_grid_size];     // Store initial value function at reentry:
     copy_vector(V_r, Vr0, Y_grid_size * B_grid_size * B_grid_size);
-    double* Q0_low = new double[Y_grid_size *  B_grid_size * B_grid_size];      // Store initial default probability:
-    copy_vector(Q_low, Q0_low, Y_grid_size * B_grid_size * B_grid_size);
-    double* Q0_high = new double[Y_grid_size *  B_grid_size * B_grid_size];      // Store initial default probability:
-    copy_vector(Q_high, Q0_high, Y_grid_size * B_grid_size * B_grid_size);
+    double* Q0_lowr = new double[Y_grid_size *  B_grid_size * B_grid_size];      // Store initial default probability:
+    copy_vector(Q_lowr, Q0_lowr, Y_grid_size * B_grid_size * B_grid_size);
+    double* Q0_highr = new double[Y_grid_size *  B_grid_size * B_grid_size];      // Store initial default probability:
+    copy_vector(Q_highr, Q0_highr, Y_grid_size * B_grid_size * B_grid_size);
 
     // Initialize difference between value functions:
     int iter = 0;          
-    double diff_q_low = 1;
-    double diff_q_high = 1;
+    double diff_q_lowr = 1;
+    double diff_q_highr = 1;
     double diff_vd = 1;
     double diff_vr = 1;
 
@@ -246,32 +248,32 @@ int Economy::solve_model(){
         update_vd();                                    // update value at default:
         update_vr_and_bond_policy();                    // update value of repayment and bond policy:
 
-        diff_q_high = 0;
-        diff_q_low = 0;
+        diff_q_highr = 0;
+        diff_q_lowr = 0;
         diff_vd = 0;
         diff_vr = 0;
 
-        #pragma omp parallel for schedule(dynamic) reduction(max:diff_q_low, diff_q_high, diff_vd, diff_vr) //num_threads(10)
+        #pragma omp parallel for schedule(dynamic) reduction(max:diff_q_lowr, diff_q_highr, diff_vd, diff_vr) //num_threads(10)
         for (int id =0; id <Y_grid_size * B_grid_size * B_grid_size; id++)
         {
-            diff_q_low = fabs(Q0_low[id] - Q_low[id]);
-            diff_q_high = fabs(Q0_high[id] - Q_high[id]);
+            diff_q_lowr = fabs(Q0_lowr[id] - Q_lowr[id]);
+            diff_q_highr = fabs(Q0_highr[id] - Q_highr[id]);
             diff_vd = fabs(V_d[id] - Vd0[id]);
             diff_vr = fabs(V_r[id] - Vr0[id]);
         }
 
-        if (diff_q_low < Tol && diff_q_high < Tol && diff_vd < Tol && diff_vr < Tol){
+        if (diff_q_lowr < Tol && diff_q_highr < Tol && diff_vd < Tol && diff_vr < Tol){
             mexPrintf("Iteration: %d\n", iter);
             mexPrintf("Difference between value function at default: %f\n", diff_vd);
             mexPrintf("Difference between value function at reentry: %f\n", diff_vr);
-            mexPrintf("Difference between low prices: %f\n", diff_q_low);
-            mexPrintf("Difference between high prices: %f\n", diff_q_high);
+            mexPrintf("Difference between low prices: %f\n", diff_q_lowr);
+            mexPrintf("Difference between high prices: %f\n", diff_q_highr);
             mexPrintf("Convergence achieved after: %d\n", iter);
             // Free memory:
             delete[] Vd0;
             delete[] Vr0;
-            delete[] Q0_low;
-            delete[] Q0_high;
+            delete[] Q0_lowr;
+            delete[] Q0_highr;
             return EXIT_SUCCESS;
 
         } else {
@@ -279,14 +281,14 @@ int Economy::solve_model(){
                 mexPrintf("Iteration: %d\n", iter);
                 mexPrintf("Difference between value function at default: %f\n", diff_vd);
                 mexPrintf("Difference between value function at reentry: %f\n", diff_vr);
-                mexPrintf("Difference between low prices: %f\n", diff_q_low);
-                mexPrintf("Difference between high prices: %f\n", diff_q_high);
+                mexPrintf("Difference between low prices: %f\n", diff_q_lowr);
+                mexPrintf("Difference between high prices: %f\n", diff_q_highr);
             }
             // Update value functions and prices:
             copy_vector(V_d, Vd0, Y_grid_size * B_grid_size * B_grid_size);
             copy_vector(V_r, Vr0, Y_grid_size * B_grid_size * B_grid_size);
-            copy_vector(Q_low, Q0_low, Y_grid_size * B_grid_size * B_grid_size);
-            copy_vector(Q_high, Q0_high, Y_grid_size * B_grid_size * B_grid_size);
+            copy_vector(Q_lowr, Q0_lowr, Y_grid_size * B_grid_size * B_grid_size);
+            copy_vector(Q_highr, Q0_highr, Y_grid_size * B_grid_size * B_grid_size);
             iter += 1;
         }
     }
@@ -294,13 +296,13 @@ int Economy::solve_model(){
     mexPrintf("Convergence not achieved after: %d\n", iter);
     mexPrintf("Difference between value function at default: %f\n", diff_vd);
     mexPrintf("Difference between value function at reentry: %f\n", diff_vr);
-    mexPrintf("Difference between low prices: %f\n", diff_q_low);
-    mexPrintf("Difference between high prices: %f\n", diff_q_high);
+    mexPrintf("Difference between low prices: %f\n", diff_q_lowr);
+    mexPrintf("Difference between high prices: %f\n", diff_q_highr);
     // Free memory:
     delete[] Vd0;
     delete[] Vr0;
-    delete[] Q0_low;
-    delete[] Q0_high;
+    delete[] Q0_lowr;
+    delete[] Q0_highr;
     return EXIT_FAILURE;
 }
 */

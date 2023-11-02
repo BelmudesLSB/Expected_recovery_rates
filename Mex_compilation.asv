@@ -4,15 +4,17 @@
 clc; 
 clear;
 
-%% mex 
-
-mex CXXFLAGS="$CXXFLAGS -fopenmp -O3" LDFLAGS="$LDFLAGS -fopenmp" main.cpp economy.cpp initialization.cpp auxiliary.cpp 
+%% mex
+mex main.cpp economy.cpp initialization.cpp auxiliary.cpp 
 
 %% Common parameters:
-params.b_grid_size = 50;               % Number of points in the grid for the bond price.
-params.b_grid_min = -0.6;              % Minimum value of the bond price.
-params.b_grid_max = 0.00;              % Maximum value of the bond price.
-params.y_grid_size = 6;                % Number of points in the grid for the income.
+params.b_grid_size_lowr = 5;           % Number of points in the grid for the bond price.
+params.b_grid_size_highr = 10;
+params.b_grid_min_lowr = -1.2;         % Minimum value of the bond price.
+params.b_grid_min_highr = -1.0;
+params.b_grid_max_lowr = 0.00;         % Maximum value of the bond price.
+params.b_grid_max_highr = 0.00;
+params.y_grid_size = 10;               % Number of points in the grid for the income.
 params.y_default = 0.969;              % Maximum income under default.
 params.beta = 0.953;                   % Discount factor.
 params.gamma = 2;                      % Risk aversion.
@@ -23,11 +25,10 @@ params.theta = 0.282;                  % Probability of a re-entry.
 params.max_iter = 300;                 % Maximum number of iterations.
 params.tol = 1e-7;                     % Tolerance for the convergence.
 params.m = 3;                          % Number of standard deviations for the income grid.
-params.alpha_low = 0;                  % Low recovery on defaulted debt.
-params.alpha_high = 0.3;               % High recovery on defaulted debt.
+params.alpha_lowr = 0;                   % Low recovery on defaulted debt.
+params.alpha_highr = 0.3;               % High recovery on defaulted debt.
 
 %% Run code with both alphas;
-
 tic;
 calibrated_model_solution = main(params);
 save('Solution', 'calibrated_model_solution')
@@ -60,9 +61,14 @@ B_policy_low(D_policy==1) = nan;
 B_policy_low = B_policy_low + 1;
 B_policy_high = B_policy_high + 1;
 
-
-%%
-
-plot(B_grid, B_policy_high(5,,4))
+%% Small analysis
+figure(1)
+plot(B_grid, B_policy_high(:,50,4));
+figure(2)
+plot(B_grid, D_policy(:,50,4));
+figure(3)
+plot(B_grid, D_policy(:,50,3));
+figure(4)
+plot(B_grid, Q_high(:,50,4));
 
 
