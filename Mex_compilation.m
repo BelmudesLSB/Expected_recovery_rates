@@ -131,6 +131,35 @@ V_high = reshape(arellano_solution_alpha_high.V, params.b_grid_size, params.y_gr
 
 %% plot: Value functions:
 
+% y_choice = 15;
+% figure('Position', [100, 100, 800, 600]); % Adjust the figure size as needed
+% hold on;
+% plot(B_grid, V_benchmark(y_choice, :), 'Color', [0.5, 0.5, 0.5], 'LineWidth', 2, 'LineStyle','--'); % Gray line
+% plot(B_grid, V_low(y_choice, :), 'r-.', 'LineWidth', 2);
+% plot(B_grid, V_high(y_choice, :), 'b', 'LineWidth', 2);
+% hold off;
+% xlabel('Bond Holdings', 'FontSize', 12);
+% ylabel('Value Functions', 'FontSize', 12);
+% title('Low recovery rate vs high recovery rate', 'FontSize', 14);
+% % Create legend with labels and numerical values
+% legend({['$\alpha_{base} = ' num2str(params_benchmark.alpha) '$'],  ['$\alpha_{low} = ' num2str(params_low.alpha) '$'], ['$\alpha_{high} = ' num2str(params_high.alpha) '$'],}, ...
+%        'Interpreter', 'latex', 'FontSize', 12, 'Location', 'Southeast');
+% % Adjust label positions
+% xlabelPos = get(gca, 'Position');
+% xlabelPos(1) = 0.9 * xlabelPos(1);
+% ylabelPos = get(gca, 'Position');
+% ylabelPos(2) = 0.9 * ylabelPos(2);
+% set(gca, 'Position', xlabelPos);
+% set(gca, 'Position', ylabelPos);
+% % Set x-axis limits to start from -0.5
+% xlim([-0.6, max(B_grid)]);
+% % Set background color to white
+% set(gcf, 'Color', 'w');
+% % Save the figure as a PNG
+% saveas(gcf, 'Value_functions.png');
+
+%% plot: Value functions:
+
 y_choice = 14;
 figure('Position', [100, 100, 800, 600]); % Adjust the figure size as needed
 hold on;
@@ -158,30 +187,75 @@ set(gcf, 'Color', 'w');
 % Save the figure as a PNG
 saveas(gcf, 'Value_functions.png');
 
+y_choice = 14;
+figure('Position', [100, 100, 800, 600]); % Adjust the figure size as needed
+hold on;
+plot(B_grid, V_benchmark(y_choice, :), 'Color', [0.5, 0.5, 0.5], 'LineWidth', 2, 'LineStyle','--'); % Gray line
+plot(B_grid, V_low(y_choice, :), 'r-.', 'LineWidth', 2);
+plot(B_grid, V_high(y_choice, :), 'b', 'LineWidth', 2);
+hold off;
+xlabel('Bond Holdings', 'FontSize', 12);
+ylabel('Value Functions', 'FontSize', 12);
+title('Low recovery rate vs high recovery rate', 'FontSize', 14);
+% Create legend with labels and numerical values
+legend({['$\alpha_{base} = ' num2str(params_benchmark.alpha) '$'],  ['$\alpha_{low} = ' num2str(params_low.alpha) '$'], ['$\alpha_{high} = ' num2str(params_high.alpha) '$'],}, ...
+       'Interpreter', 'latex', 'FontSize', 12, 'Location', 'Southeast');
+% Adjust label positions
+xlabelPos = get(gca, 'Position');
+xlabelPos(1) = 0.9 * xlabelPos(1);
+ylabelPos = get(gca, 'Position');
+ylabelPos(2) = 0.9 * ylabelPos(2);
+set(gca, 'Position', xlabelPos);
+set(gca, 'Position', ylabelPos);
+% Set x-axis limits to start from -0.5
+xlim([-0.55, -0.25]);
+% Set background color to white
+set(gcf, 'Color', 'w');
+% Save the figure as a PNG
+saveas(gcf, 'Value_functions_zoom.png');
+
 %% put 2 of them together:
 
+y_choice = 14;
 
-figure
+figure('Position', [100, 100, 800, 600]); % Adjust the figure size as needed
 hold on
-plot(B_grid, V_low(y_choice, :), 'r-.', 'LineWidth', 2);
+plot(B_grid, V_low(y_choice, :), 'r-.', 'LineWidth', 4);
+plot(calibrated_model_solution.B_grid_lowr, V(121,:,y_choice), 'b.',  'MarkerSize', 13, 'LineWidth', 2);
+xlim([-0.6, max(B_grid)]);
+title('Low recovery rate vs Two bond model', 'FontSize', 14);
+legend({['$V(\cdot,y = 1.07)$'],['$V(\cdot,b_h=0,y = 1.07)$']}, ...
+       'Interpreter', 'latex', 'FontSize', 12, 'Location', 'Southeast');
+set(gcf, 'Color', 'w');
+xlabel('Bond Holdings', 'FontSize', 12);
+ylabel('Value Functions', 'FontSize', 12);
+saveas(gcf, 'Comparisson_low_recovery_vs_2_bond.png');
 
+figure('Position', [100, 100, 800, 600]); % Adjust the figure size as needed
+hold on
+plot(B_grid, V_low(y_choice, :), 'r-.', 'LineWidth', 4);
+plot(calibrated_model_solution.B_grid_lowr, V(121,:,y_choice), 'b.',  'MarkerSize', 13, 'LineWidth', 2);
+xlim([-0.55, -0.25]);
+title('Low recovery rate vs Two bond model', 'FontSize', 14);
+legend({['$V(\cdot,y = 1.07)$'],['$V(\cdot,b_h=0,y = 1.07)$']}, ...
+       'Interpreter', 'latex', 'FontSize', 12, 'Location', 'Southeast');
+set(gcf, 'Color', 'w');
+xlabel('Bond Holdings', 'FontSize', 12);
+ylabel('Value Functions', 'FontSize', 12);
+saveas(gcf, 'Comparisson_low_recovery_vs_2_bond_zoom.png');
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+figure('Position', [100, 100, 800, 600]); % Adjust the figure size as needed
+hold on
+plot(B_grid, V_high(y_choice, :),  'r-.', 'LineWidth', 4);
+plot(calibrated_model_solution.B_grid_highr, V(:,75,y_choice), 'b.',  'MarkerSize', 13, 'LineWidth', 2);
+title('High recovery rate vs Two bond model', 'FontSize', 14);
+legend({['$V(\cdot,y = 1.07)$'],['$V(b_l=0,\cdot,y = 1.07)$']}, ...
+       'Interpreter', 'latex', 'FontSize', 12, 'Location', 'Southeast');
+set(gcf, 'Color', 'w');
+xlabel('Bond Holdings', 'FontSize', 12);
+ylabel('Value Functions', 'FontSize', 12);
+xlim([-0.6, max(B_grid)]);
+saveas(gcf, 'Comparisson_high_recovery_vs_2_bond.png');
 
 
 
