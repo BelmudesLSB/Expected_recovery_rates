@@ -9,10 +9,11 @@
 //! Note: For computations we first iterate over the low recovery bond and then iterate over the high recovery bond.
 //! Vectors are then V=[(b_low1;b_high1;y_1), (b_low2;b_high1;y_1),...,(b_lown;b_high1;y_1),(b_low1;b_high2;y_1),...
 
-Economy::Economy(int b_grid_size, double b_grid_min, double b_grid_max, int y_grid_size, double y_default, double beta, double gamma, double r, double rho, double sigma, double theta, double alpha_low, double alpha_high, double tol, int max_iter, double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q_low, double* ptr_q_high, int* ptr_b_policy_low, int* ptr_b_policy_high, double* ptr_d_policy){
+Economy::Economy(int b_grid_size_low, int b_grid_size_high, double b_grid_min, double b_grid_max, int y_grid_size, double y_default, double beta, double gamma, double r, double rho, double sigma, double theta, double alpha_low, double alpha_high, double tol, int max_iter, double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid_low, double* ptr_b_grid_high, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q_low, double* ptr_q_high, int* ptr_b_policy_low, int* ptr_b_policy_high, double* ptr_d_policy){
   
     // Parameters:
-    B_grid_size = b_grid_size;            // Number of points in the grid for the bond price.   
+    B_grid_size_low = b_grid_size_low;            // Number of points in the grid for the bond price.
+    B_grid_size_high = b_grid_size_high;          // Number of points in the grid for the bond price.
     B_grid_min = b_grid_min;              // Minimum value of the bond price.
     B_grid_max = b_grid_max;              // Maximum value of the bond price.
     Y_grid_size = y_grid_size;            // Number of points in the grid for the income.
@@ -32,7 +33,8 @@ Economy::Economy(int b_grid_size, double b_grid_min, double b_grid_max, int y_gr
     // Name the pointer to the arrays we will be working:
     Y_grid = ptr_y_grid;                  // Income grid.
     Y_grid_default = ptr_y_grid_default;  // Income grid for the default state.
-    B_grid = ptr_b_grid;                  // Bond price grid.
+    B_grid_low = ptr_b_grid_low;                  // Bond price grid.
+    B_grid_high = ptr_b_grid_high;                  // Bond price grid.
     P = ptr_p_grid;                       // Transition matrix.
     V = ptr_v;                            // Value function.
     V_r = ptr_v_r;                        // Value function under re-entry.
@@ -48,11 +50,20 @@ Economy::Economy(int b_grid_size, double b_grid_min, double b_grid_max, int y_gr
 // Create grids and store it in the space previously allocated:
 int Economy::initialize_economy(){
     // Create the grid for the income:
-    create_bond_grids(B_grid, B_grid_size, B_grid_max, B_grid_min);
-    if (B_grid[B_grid_size - 1] > Tol || B_grid[B_grid_size - 1] < -Tol){
-        mexPrintf("Error: the bond grid is not correctly initialized..\n");
-        return EXIT_FAILURE;
-    }
+    create_bond_grids(B_grid_low, B_grid_size_low, B_grid_max, B_grid_min);
+    create_bond_grids(B_grid_high, 10, B_grid_max, B_grid_min);
+
+    if (B_grid_low[B_grid_size_low - 1] > Tol || B_grid_low[B_grid_size_low - 1] < -Tol)
+    {
+            mexPrintf("Error: the bond grid is not correctly initialized..\n");
+            return EXIT_FAILURE;
+        if (B_grid_high[B_grid_size_high - 1] > Tol || B_grid_high[B_grid_size_high - 1] < -Tol)
+        {
+            mexPrintf("Error: the bond grid is not correctly initialized..\n");
+            return EXIT_FAILURE;
+        }
+    }    
+    
     // Create the grid for the income and probability matrix:
     create_income_and_prob_grids(Y_grid, P, Y_grid_size, Sigma, Rho, M);
     for (int i = 0; i < Y_grid_size; i++){
@@ -76,7 +87,7 @@ int Economy::initialize_economy(){
     return EXIT_SUCCESS;
 }
 
-
+/*
 // Guess value function at default, value at reentry and price:
 void Economy::guess_vd_vr_q(){
     for (int i=0; i<Y_grid_size; i++)
@@ -292,3 +303,4 @@ int Economy::solve_model(){
     delete[] Q0_high;
     return EXIT_FAILURE;
 }
+*/

@@ -4,12 +4,12 @@
 clc; 
 clear;
 
-%% mex 
-
-mex CXXFLAGS="$CXXFLAGS -fopenmp -O3" LDFLAGS="$LDFLAGS -fopenmp" main.cpp economy.cpp initialization.cpp auxiliary.cpp 
+%% mex
+mex main.cpp economy.cpp initialization.cpp auxiliary.cpp 
 
 %% Common parameters:
-params.b_grid_size = 75;              % Number of points in the grid for the bond price.
+params.b_grid_size_low = 5;             % Number of points in the grid for the bond price.
+params.b_grid_size_high = 10;
 params.b_grid_min = -1.2;              % Minimum value of the bond price.
 params.b_grid_max = 0.00;              % Maximum value of the bond price.
 params.y_grid_size = 10;               % Number of points in the grid for the income.

@@ -6,9 +6,10 @@
 class Economy{
 
     public:
-
+    
         // Parameters for this economy;
-        int B_grid_size;       // Number of points in the grid for the bond price.
+        int B_grid_size_low;       // Number of points in the grid for the bond price.
+        int B_grid_size_high;      // Number of points in the grid for the bond price.
         double B_grid_min;     // Minimum value of the bond price.
         double B_grid_max;     // Maximum value of the bond price.
         int Y_grid_size;       // Number of points in the grid for the income.
@@ -24,11 +25,11 @@ class Economy{
         double Tol;            // Tolerance for the convergence.
         int Max_iter;          // Maximum number of iterations.
         double M;              // Number of standard deviations for the income grid.
-
         // Set pointers:
         double* Y_grid;
         double* Y_grid_default;
-        double* B_grid;
+        double* B_grid_low;
+        double* B_grid_high;
         double* P;
         double* V;
         double* V_r;
@@ -38,13 +39,12 @@ class Economy{
         int* B_policy_low;
         int* B_policy_high;
         double* D_policy;  
-
         // Constructor:
-        Economy(int b_grid_size, double b_grid_min, double b_grid_max, int y_grid_size, double y_default, double beta, double gamma, double r, double rho, double sigma, double theta, double alpha_low, double alpha_high, double tol, int max_iter, double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q_low, double* ptr_q_high, int * ptr_b_policy_low, int * ptr_b_policy_high, double* ptr_d_policy);
+        Economy(int b_grid_size_low, int b_grid_size_high, double b_grid_min, double b_grid_max, int y_grid_size, double y_default, double beta, double gamma, double r, double rho, double sigma, double theta, double alpha_low, double alpha_high, double tol, int max_iter, double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid_low, double* ptr_b_grid_high, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q_low, double* ptr_q_high, int * ptr_b_policy_low, int * ptr_b_policy_high, double* ptr_d_policy);
 
         // Initialize economy:
         int initialize_economy();
-
+        /*
         // Solution Methods:
             // Guess:
             void guess_vd_vr_q();
@@ -63,6 +63,7 @@ class Economy{
 
             // Solve:
             int solve_model();
+            */
 };
 
 #endif
