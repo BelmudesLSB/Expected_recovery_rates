@@ -10,7 +10,11 @@
 #include "initialization.hpp"
 #include "auxiliary.hpp"
 
+
+
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[]){
+
+   
 
     // Check for the proper number of arguments
     if (nrhs != 1 || nlhs != 1) {
