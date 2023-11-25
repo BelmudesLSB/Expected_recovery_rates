@@ -11,13 +11,13 @@ mex CXXFLAGS="$CXXFLAGS -fopenmp -O3" LDFLAGS="$LDFLAGS -fopenmp" main.cpp econo
 
 %% Common parameters:
 
-params.b_grid_size_lowr = 70;           % Number of points in the grid for the bond price.
-params.b_grid_size_highr = 100;
+params.b_grid_size_lowr = 100;           % Number of points in the grid for the bond price.
+params.b_grid_size_highr = 150;
 params.b_grid_min_lowr = -0.7;          % Minimum value of the bond price.
 params.b_grid_min_highr = -1;
 params.b_grid_max_lowr = 0.0;           % Maximum value of the bond price.
 params.b_grid_max_highr = 0.0;
-params.y_grid_size = 21;               % Number of points in the grid for the income.
+params.y_grid_size = 32;               % Number of points in the grid for the income.
 params.y_default = 0.969;              % Maximum income under default.
 params.beta = 0.953;                   % Discount factor.
 params.gamma = 2;                      % Risk aversion.
@@ -79,7 +79,7 @@ disp(['Low recovery, Highest debt index:  ' num2str(lowest_low_check)]);
 rng(0);
 X = 10000;
 params_Simulation.TBurn = X;
-params_Simulation.T = params_Simulation.TBurn + 10*X;
+params_Simulation.T = params_Simulation.TBurn + 1000*X;
 Random_vec.theta = rand(params_Simulation.T,1);
 
 [stats, simulated] = Run_Simulations(params, params_Simulation, Solution, Random_vec);

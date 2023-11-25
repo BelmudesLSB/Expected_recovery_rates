@@ -58,12 +58,14 @@ function [stats, simulations] = Run_Simulations(p, p_sim, Eq, Rand_Vec)
     simulations.B_low_index = bt_lowr(TBurn:end);
     simulations.B_high = Eq.B_grid_highr(bt_highr(TBurn:end));
     simulations.B_high_index = bt_highr(TBurn:end);
+    simulations.B_total = simulations.B_low + simulations.B_high;
     simulations.Y = Eq.Y_grid(yt(p_sim.TBurn:end));
     simulations.Y_index = yt(p_sim.TBurn:end);
 
     stats.Y = mean(simulations.Y(simulations.Default_policy == 0));
     stats.B_lowr = mean(simulations.B_low(simulations.Default_policy == 0));
     stats.B_highr = mean(simulations.B_high(simulations.Default_policy == 0));
+    stats.B_total = mean(simulations.B_total);
     stats.Default_policy = sum(simulations.Default_policy)/T;
 
 end
