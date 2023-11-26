@@ -9,7 +9,7 @@
 //! Note: For computations we first iterate over the low recovery bond and then iterate over the high recovery bond.
 //! Vectors are then V=[(b_lowr1;b_highr1;y_1), (b_lowr2;b_highr1;y_1),...,(b_lowrn;b_highr1;y_1),(b_lowr1;b_highr2;y_1),...
 
-const int MAX_THREADS = 10; // Define a constant variable at the start of the file
+const int MAX_THREADS = 32; // Define a constant variable at the start of the file
 
 Economy::Economy(int b_grid_size_lowr, int b_grid_size_highr, double b_grid_min_lowr, double b_grid_min_highr, double b_grid_max_lowr, double b_grid_max_highr, int y_grid_size, double y_default, double beta, double gamma, double r, double rho, double sigma, double theta, double alpha_lowr, double alpha_highr, double tol, int max_iter, double m, double* ptr_y_grid, double* ptr_y_grid_default, double* ptr_b_grid_lowr, double* ptr_b_grid_highr, double* ptr_p_grid, double* ptr_v, double* ptr_v_r, double* ptr_v_d, double* ptr_q_lowr, double* ptr_q_highr, int* ptr_b_policy_lowr, int* ptr_b_policy_highr, double* ptr_d_policy){
   
